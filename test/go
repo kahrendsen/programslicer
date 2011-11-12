@@ -1,0 +1,3 @@
+llvm-gcc --emit-llvm -g -c s.c -o s.bc
+llvm-gcc --emit-llvm -g -S s.c -o s.ll
+../../../../Release/bin/opt -load ../../../../Release/lib/ProgramSlicing.so -CDG < s.bc > /dev/null
