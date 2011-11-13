@@ -5,6 +5,8 @@
 bool CDG::runOnFunction(Function &F)
 {
   errs() << "Function: " << F << "\n";
+
+  PostDominatorTree &PDT = getAnalysis<PostDominatorTree>();
   return false;
 }
 
