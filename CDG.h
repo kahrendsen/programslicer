@@ -26,28 +26,33 @@ using namespace llvm;
 
 namespace {
 
-  /// This struct implements the pass that prints the source line number as
-  /// comments right after each instruction in a function.
-  class CDG : public FunctionPass {
-  public:
-    // Pass Indentifier 
-    static char ID;
-    CDG() : FunctionPass(ID) {}
+    /// The class generates a control dependence graph for a function.
+    class CDG : public FunctionPass {
+    public:
+        // Pass Indentifier 
+        static char ID;
+        CDG() : FunctionPass(ID) {}
 
-    virtual bool runOnFunction(Function &F);
+        virtual bool runOnFunction(Function &F);
 
-    virtual void getAnalysisUsage(AnalysisUsage& AU) const
-    {
-      AU.setPreservesCFG();
-      AU.addRequired<PostDominatorTree>();
-    }
-  }; // end of struct CDG
+        virtual void getAnalysisUsage(AnalysisUsage& AU) const
+        {
+            AU.setPreservesCFG();
+            AU.addRequired<PostDominatorTree>();
+        }
 
-  char CDG::ID = 0;
+    private:
+        // The control dependence graph based on instructions
+        DirectedGraph<Instruction> _instGraph;
+        // The control dependence graph based on basic blocks
+        DirectedGraph<BasicBlock> _bbGraph;
+    };
 
-  static RegisterPass<CDG> X("CDG", "CDG Pass",
-                        false /* only looks at CFG */,
-                        false /* analysis pass */);
+    char CDG::ID = 0;
+
+    static RegisterPass<CDG> X("CDG", "CDG Pass",
+            false /* only looks at CFG */,
+            false /* analysis pass */);
 } // end of anonymous namespace
 
 #endif // CDG_H
