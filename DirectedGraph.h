@@ -18,13 +18,13 @@ namespace llvm {
         typedef std::map<NodeT*, nodeSet_t> edgeMap_t;
 
         DirectedGraph() {}
-        void Insert(NodeT* A, NodeT* B)
+        void insert(NodeT* A, NodeT* B)
         {
             succMap[A].insert(B);
             predMap[B].insert(A);
         }
 
-        void Erase(NodeT* A, NodeT* B)
+        void erase(NodeT* A, NodeT* B)
         {
             succMap[A].erase(B);
             predMap[B].erase(A);
@@ -40,10 +40,43 @@ namespace llvm {
             return predMap[A];
         }
 
+        /// print - Implement operator << on DirectedGraph
+        ///
+        void print(raw_ostream &O) const
+        {
+            O << "---------------------------------------\n";
+            O << "SUCC MAP:\n";
+            typename edgeMap_t::const_iterator it, e;
+            typename nodeSet_t::const_iterator jt, et;
+            for (it = succMap.begin(), e = succMap.end(); it != e; ++it)
+            {
+                for (jt = it->second.begin(), et = it->second.end(); jt != et; ++jt)
+                {
+                    O << "(" << it->first << ", " << *jt << ")\n";
+                }
+            }
+            O << "PRED MAP:\n";
+            for (it = predMap.begin(), e = predMap.end(); it != e; ++it)
+            {
+                for (jt = it->second.begin(), et = it->second.end(); jt != et; ++jt)
+                {
+                    O << "(" << it->first << ", " << *jt << ")\n";
+                }
+            }
+            O << "---------------------------------------\n";
+        }
+
     private:
         edgeMap_t succMap;
         edgeMap_t predMap;
     };
+
+    template<typename NodeT>
+    inline raw_ostream &operator <<(raw_ostream &OS, const DirectedGraph<NodeT> &G)
+    {
+        G.print(OS);
+        return OS;
+    }
 }
 
 #endif // DIRECTED_GRAPH_H

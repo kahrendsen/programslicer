@@ -43,9 +43,11 @@ namespace {
 
     private:
         // The control dependence graph based on instructions
-        DirectedGraph<Instruction> _instGraph;
+        typedef DirectedGraph<Instruction> _instGraph_t;
+        _instGraph_t _instGraph;
         // The control dependence graph based on basic blocks
-        DirectedGraph<BasicBlock> _bbGraph;
+        typedef DirectedGraph<BasicBlock> _bbGraph_t;
+        _bbGraph_t _bbGraph;
     };
 
     char CDG::ID = 0;
