@@ -10,18 +10,19 @@
 #include "llvm/DerivedTypes.h"
 
 namespace llvm {
-    template <class NodeT>
+    template <typename NodeT, typename EdgeT>
     class DirectedGraph
     {
     public:
-        typedef std::set<NodeT*> nodeSet_t;
-        typedef std::map<NodeT*, nodeSet_t> edgeMap_t;
+        typedef std::pair<NodeT*, EdgeT*> nodePair_t;
+        typedef std::map<NodeT*, EdgeT*> nodeMap_t;
+        typedef std::map<NodeT*, nodeMap_t> edgeMap_t;
 
         DirectedGraph() {}
-        void insert(NodeT* A, NodeT* B)
+        void insert(NodeT* A, NodeT* B, EdgeT* edge = NULL)
         {
-            succMap[A].insert(B);
-            predMap[B].insert(A);
+            succMap[A][B] = edge;
+            predMap[B][A] = edge;
         }
 
         void erase(NodeT* A, NodeT* B)
@@ -30,12 +31,12 @@ namespace llvm {
             predMap[B].erase(A);
         }
 
-        const nodeSet_t& getSuccSet(NodeT* A)
+        const nodeMap_t& getSuccSet(NodeT* A)
         {
             return succMap[A];
         }
 
-        const nodeSet_t& getPredSet(NodeT* A)
+        const nodeMap_t& getPredSet(NodeT* A)
         {
             return predMap[A];
         }

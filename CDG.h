@@ -43,10 +43,10 @@ namespace {
 
     private:
         // The control dependence graph based on instructions
-        typedef DirectedGraph<Instruction> _instGraph_t;
+        typedef DirectedGraph<Instruction, void> _instGraph_t;
         _instGraph_t _instGraph;
         // The control dependence graph based on basic blocks
-        typedef DirectedGraph<BasicBlock> _bbGraph_t;
+        typedef DirectedGraph<BasicBlock, void> _bbGraph_t;
         _bbGraph_t _bbGraph;
     };
 
