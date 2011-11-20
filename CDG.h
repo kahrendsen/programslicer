@@ -31,7 +31,7 @@ namespace {
     public:
         // Pass Indentifier 
         static char ID;
-        CDG() : FunctionPass(ID) {}
+        CDG() : FunctionPass(ID), _bbGraph("blockCDG"), _instGraph("instructionCDG") {}
 
         virtual bool runOnFunction(Function &F);
 
@@ -42,12 +42,12 @@ namespace {
         }
 
     private:
-        // The control dependence graph based on instructions
-        typedef DirectedGraph<Instruction, void> _instGraph_t;
-        _instGraph_t _instGraph;
         // The control dependence graph based on basic blocks
         typedef DirectedGraph<BasicBlock, void> _bbGraph_t;
         _bbGraph_t _bbGraph;
+        // The control dependence graph based on instructions
+        typedef DirectedGraph<Instruction, void> _instGraph_t;
+        _instGraph_t _instGraph;
     };
 
     char CDG::ID = 0;

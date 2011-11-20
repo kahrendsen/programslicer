@@ -18,7 +18,9 @@ namespace llvm {
         typedef std::map<NodeT*, EdgeT*> nodeMap_t;
         typedef std::map<NodeT*, nodeMap_t> edgeMap_t;
 
-        DirectedGraph() {}
+        std::string name;
+
+        DirectedGraph(std::string name = "") : name(name) {}
         void insert(NodeT* A, NodeT* B, EdgeT* edge = NULL)
         {
             succMap[A][B] = edge;
@@ -75,6 +77,23 @@ namespace llvm {
         void printDot(raw_ostream &O) const
         {
             // TODO
+            O << "digraph " << name << "{\n";
+            typename edgeMap_t::const_iterator it, e;
+            typename nodeMap_t::const_iterator jt, et;
+            for (it = succMap.begin(), e = succMap.end(); it != e; ++it)
+            {
+                for (jt = it->second.begin(), et = it->second.end(); jt != et; ++jt)
+                {
+                    O << "\t" << it->first
+                      << " -> " << jt->first;
+                    if (jt->second != NULL)
+                    {
+                        O << " [ label = \"" << jt->second << "\" ]";
+                    }
+                    O << ";\n";
+                }
+            }
+            O << "}\n";
         }
 
     private:
