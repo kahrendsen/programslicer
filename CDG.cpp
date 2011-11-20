@@ -11,18 +11,16 @@ bool CDG::runOnFunction(Function &F)
     // Iterate over basic blocks
     for (Function::iterator fIt = F.begin(), e = F.end(); fIt != e; ++fIt)
     {
-        errs() << "1\n";
         BasicBlock *B = &*fIt;
         DomTreeNode *BNode = PDT.getNode(B);
-        errs() << "2\n";
 
         for (succ_iterator suIt = succ_begin(B), suE = succ_end(B); suIt != suE; ++suIt)
         {
             BasicBlock *N = *suIt;
             DomTreeNode *NNode = PDT.getNode(N);
 
-            errs() << "B:" << *B << "\n";
-            errs() << "N:" << *N << "\n";
+//            errs() << "B:" << *B << "\n";
+//            errs() << "N:" << *N << "\n";
             while (BNode->getIDom() != NNode)
             {
                 _bbGraph.insert(B, N);
@@ -33,7 +31,6 @@ bool CDG::runOnFunction(Function &F)
                 }
                 N = NNode->getBlock();
             }
-            errs() << "4\n";
         }
     }
 
@@ -41,7 +38,7 @@ bool CDG::runOnFunction(Function &F)
     for (Function::iterator fIt = F.begin(), e = F.end(); fIt != e; ++fIt)
     {
         BasicBlock *B = &*fIt;
-        const _bbGraph_t::nodeSet_t &predSet = _bbGraph.getPredSet(B);
+        const _bbGraph_t::nodeMap_t &predSet = _bbGraph.getPredSet(B);
         if (predSet.empty())
         {
             _bbGraph.insert(NULL, B);
@@ -54,11 +51,11 @@ bool CDG::runOnFunction(Function &F)
     for (Function::iterator fIt = F.begin(), e = F.end(); fIt != e; ++fIt)
     {
         BasicBlock *D = &*fIt;
-        const _bbGraph_t::nodeSet_t &predSet = _bbGraph.getPredSet(D);
-        for (_bbGraph_t::nodeSet_t::const_iterator it = predSet.begin(), et = predSet.end();
+        const _bbGraph_t::nodeMap_t &predSet = _bbGraph.getPredSet(D);
+        for (_bbGraph_t::nodeMap_t::const_iterator it = predSet.begin(), et = predSet.end();
                 it != et; ++it)
         {
-            BasicBlock *S = *it;
+            BasicBlock *S = it->first;
             if (S != NULL)
             {
                 src = S->getTerminator();

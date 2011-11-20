@@ -45,6 +45,7 @@ namespace llvm {
         ///
         void print(raw_ostream &O) const
         {
+            /*
             O << "---------------------------------------\n";
             O << "SUCC MAP:\n";
             typename edgeMap_t::const_iterator it, e;
@@ -65,6 +66,15 @@ namespace llvm {
                 }
             }
             O << "---------------------------------------\n";
+            */
+            printDot(O);
+        }
+
+        /// printDot - print out the graph as a dot graph.
+        ///
+        void printDot(raw_ostream &O) const
+        {
+            // TODO
         }
 
     private:
@@ -72,8 +82,8 @@ namespace llvm {
         edgeMap_t predMap;
     };
 
-    template<typename NodeT>
-    inline raw_ostream &operator <<(raw_ostream &OS, const DirectedGraph<NodeT> &G)
+    template<typename NodeT, typename EdgeT>
+    inline raw_ostream &operator <<(raw_ostream &OS, const DirectedGraph<NodeT, EdgeT> &G)
     {
         G.print(OS);
         return OS;
