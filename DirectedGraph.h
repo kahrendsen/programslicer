@@ -84,8 +84,11 @@ namespace llvm {
             {
                 for (jt = it->second.begin(), et = it->second.end(); jt != et; ++jt)
                 {
-                    O << "\t" << it->first
-                      << " -> " << jt->first;
+                    O << "\t" << "\"";
+                    it->first==NULL ? O << "entry" : O << *it->first; 
+                    O << "\"" << " -> " << "\"";
+                    jt->first==NULL ? O << "entry" : O << *jt->first; 
+                    O << "\"";
                     if (jt->second != NULL)
                     {
                         O << " [ label = \"" << jt->second << "\" ]";
