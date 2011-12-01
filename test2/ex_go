@@ -1,0 +1,4 @@
+./my-llvm-gcc --emit-llvm -c ex.c -o ex.bc
+./my-llvm-gcc --emit-llvm -S ex.c -o ex.ll
+../../../../Release/bin/opt -load ../../../../Release/lib/anders-aa.so -anders -analyze < ex.bc
+../../../../Release/bin/opt -load ../../../../Release/lib/sfs-aa.so -sfs-aa -analyze < ex.bc
