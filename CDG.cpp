@@ -19,8 +19,6 @@ bool CDG::runOnFunction(Function &F)
             BasicBlock *N = *suIt;
             DomTreeNode *NNode = PDT.getNode(N);
 
-//            errs() << "B:" << *B << "\n";
-//            errs() << "N:" << *N << "\n";
             while (BNode->getIDom() != NNode)
             {
                 _bbGraph.insert(B, N);

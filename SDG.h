@@ -89,7 +89,7 @@ namespace llvm {
 
             virtual void getAnalysisUsage(AnalysisUsage& AU) const;
 
-            SDG_t getGraph() const { return graph; }
+            const SDG_t &getGraph() const { return graph; }
 
         private:
             SDG_t graph;

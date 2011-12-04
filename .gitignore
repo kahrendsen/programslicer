@@ -3,6 +3,7 @@
 *.ll
 *.o
 *.exe
+tags
 Local/*
 Debug+Asserts/*
 Release/*

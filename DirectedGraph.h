@@ -14,6 +14,7 @@ namespace llvm {
     class DirectedGraph
     {
     public:
+        typedef std::set<NodeT*> nodeSet_t;
         typedef std::pair<NodeT*, EdgeT*> nodePair_t;
         typedef std::map<NodeT*, EdgeT*> nodeMap_t;
         typedef std::map<NodeT*, nodeMap_t> edgeMap_t;
@@ -25,12 +26,15 @@ namespace llvm {
         {
             succMap[A][B] = edge;
             predMap[B][A] = edge;
+            nodeSet.insert(A);
+            nodeSet.insert(B);
         }
 
         void erase(NodeT* A, NodeT* B)
         {
             succMap[A].erase(B);
             predMap[B].erase(A);
+            // TODO: erase node set entry
         }
 
         const nodeMap_t& getSuccSet(NodeT* A)
@@ -41,6 +45,11 @@ namespace llvm {
         const nodeMap_t& getPredSet(NodeT* A)
         {
             return predMap[A];
+        }
+
+        const nodeSet_t& getNodeSet() const
+        {
+            return nodeSet;
         }
 
         /// print - Implement operator << on DirectedGraph
@@ -76,7 +85,6 @@ namespace llvm {
         ///
         void printDot(raw_ostream &O) const
         {
-            // TODO
             O << "digraph " << name << "{\n";
             typename edgeMap_t::const_iterator it, e;
             typename nodeMap_t::const_iterator jt, et;
@@ -102,6 +110,7 @@ namespace llvm {
     private:
         edgeMap_t succMap;
         edgeMap_t predMap;
+        nodeSet_t nodeSet;
     };
 
     template<typename NodeT, typename EdgeT>
