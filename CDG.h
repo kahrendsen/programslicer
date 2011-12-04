@@ -24,7 +24,7 @@
 
 using namespace llvm;
 
-namespace {
+namespace llvm {
 
     /// The class generates a control dependence graph for a function.
     class CDG : public FunctionPass {
@@ -54,7 +54,7 @@ namespace {
 
     static RegisterPass<CDG> X("CDG", "CDG Pass",
             false /* only looks at CFG */,
-            false /* analysis pass */);
+            true /* analysis pass */);
 } // end of anonymous namespace
 
 #endif // CDG_H

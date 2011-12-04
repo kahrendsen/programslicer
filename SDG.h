@@ -24,7 +24,7 @@
 
 using namespace llvm;
 
-namespace {
+namespace llvm {
 
     /// Different Edge Attribute Values
     enum EdgeAttr
@@ -47,9 +47,11 @@ namespace {
             bool hasCall() const;
             bool hasParamIn() const;
             bool hashasParamOut() const;
+            bool ifMask(int mask) const { return attr & mask; }
+
         private:
             int attr;
-    }
+    };
 
     /// SDG Node Attr
     enum NodeAttr
@@ -59,40 +61,45 @@ namespace {
         callerAux,
         calleeAux,
         SIZE
-    }
+    };
 
     /// SDG node type
     // TODO: implement
     class SDGNode
     {
+        public:
+            NodeAttr getAttr() const { return attr; }
+            Value *getValue() const { return value; }
+
         private:
             NodeAttr attr;
-            Instruction *inst;
-            Function *func;
-    }
+            Value *value;
+    };
 
     /// The class generates a control dependence graph for a function.
     class SDG : public ModulePass {
-    public:
-        // Pass Indentifier 
-        static char ID;
-        SDG() : ModulePass(ID), _instGraph("SDG") {}
+        public:
+            typedef DirectedGraph<SDGNode, SDGEdge> SDG_t;
 
-        virtual bool runOnFunction(Function &F);
+            // Pass Indentifier 
+            static char ID;
+            SDG() : ModulePass(ID), graph("SDG") {}
 
-        virtual void getAnalysisUsage(AnalysisUsage& AU) const;
+            virtual bool runOnModule(Module &F);
 
-    private:
-        // The system dependence graph based on instructions
-        typedef DirectedGraph<Instruction, EdgeType> _instGraph_t;
-        _instGraph_t _instGraph;
+            virtual void getAnalysisUsage(AnalysisUsage& AU) const;
+
+            SDG_t getGraph() const { return graph; }
+
+        private:
+            SDG_t graph;
     };
 
     char SDG::ID = 0;
 
     static RegisterPass<SDG> X("SDG", "SDG Pass",
-            false /* only looks at SFG */,
-            false /* analysis pass */);
+            true /* only looks at SFG */,
+            true /* analysis pass */);
 } // end of anonymous namespace
 
 #endif // SDG_H
