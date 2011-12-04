@@ -3,6 +3,7 @@
 *.ll
 *.o
 *.exe
+Local/*
 Debug+Asserts/*
 Release/*
 Release+Asserts/*

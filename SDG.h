@@ -31,13 +31,44 @@ namespace {
     {
         control = 1,
         flow = 2,
-        // ... TODO: update after reading new papers.
+        call = 4,
+        paramIn = 8,
+        paramOut = 16,
+        MASK = 32
     };
 
     /// The class defines an edge type.
-    /// TODO: describe
-    class EdgeType
+    /// TODO: more function call
+    class SDGEdge
     {
+        public:
+            bool hasControl() const;
+            bool hasFlow() const;
+            bool hasCall() const;
+            bool hasParamIn() const;
+            bool hashasParamOut() const;
+        private:
+            int attr;
+    }
+
+    /// SDG Node Attr
+    enum NodeAttr
+    {
+        instruction,
+        entry,
+        callerAux,
+        calleeAux,
+        SIZE
+    }
+
+    /// SDG node type
+    // TODO: implement
+    class SDGNode
+    {
+        private:
+            NodeAttr attr;
+            Instruction *inst;
+            Function *func;
     }
 
     /// The class generates a control dependence graph for a function.

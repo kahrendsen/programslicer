@@ -1,0 +1,6 @@
+label name:
+Ln: Instructions on line number n (start from n=7 for define void @Add).
+entry_func: Function entries for func.
+Ln_param_in/out: Aux nodes for data nodes at function calls at the callers' side.
+Func_param_in/out: Aux nodes for data nodes at function calls at the callees' side.
+
