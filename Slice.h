@@ -25,7 +25,7 @@ namespace llvm {
     /// The class generates a control dependence graph for a function.
     class Slice : public ModulePass {
     public:
-        typedef std::vector<SDGNode*> nodeList_t;
+        typedef std::set<SDGNode*> nodeSet_t;
         // Pass Indentifier 
         static char ID;
         Slice() : ModulePass(ID) {}
@@ -43,19 +43,19 @@ namespace llvm {
         /// Mark the reaching vertices to construct a slice, depending on a
         /// system dependence graph.
         /// sdg: system dependence graph
-        /// resultList: the result marked node list
-        static bool markVerticesOfSlice(const SDG &sdg, nodeList_t &resultList);
+        /// resultSet: the result marked node list
+        static bool markVerticesOfSlice(SDG &sdg, nodeSet_t &resultSet);
 
         /// mark the reaching vertices to a set of vertices, with a certain edge
         /// type mask.
         /// sdg: system dependence graph
-        /// workList: the initial work list, COPY-ON-VALUE
-        /// resultList: the result marked node list
+        /// workSet: the initial work list, COPY-ON-VALUE
+        /// resultSet: the result marked node list
         /// mask: edge mask to be considered.
-        static bool markReachingVertices(const SDG &sdg, nodeList_t &resultList,
-                nodeList_t workList, int mask);
+        static bool markReachingVertices(SDG &sdg, nodeSet_t &resultSet,
+                nodeSet_t workSet, int mask);
 
-        nodeList_t markedNodes;
+        nodeSet_t markedNodes;
     };
 
     char Slice::ID = 0;
