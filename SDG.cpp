@@ -1,5 +1,6 @@
 // Author Hao Wu and Ying-yu Chen
 
+#include "llvm/Instructions.h"
 #include "llvm/Support/InstIterator.h"
 
 #include "SDG.h"
@@ -56,9 +57,26 @@ bool SDG::runOnModule(Module &M)
     }
 
     // Step 2: INTERprocedure Analysis
-    // Aux node for function call, etc.
-    // Step X: TODO
-    //
+    for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
+    {
+        Function &F = *it;
+        for (inst_iterator It = inst_begin(F), E = inst_end(F); It != E; ++It)
+        {
+            Instruction *I = &*It;
+            if (CallInst *CI = dyn_cast<CallInst>(I))
+            {
+                Function *CF = CI->getCalledFunction();
+                // Step 2.1: Add call edges
+                src = &instNodeMap[CI];
+                dst = &entryNodeMap[CF];
+                assert(src.getValue());
+                assert(dst.getValue());
+                graph.insert(src, dst);
+                // Step 2.2: TODO: Add aux nodes for function call.
+                // Step 2.3: TODO: Add relationship between aux nodes
+            }
+        }
+    }
     return false;
 }
 
