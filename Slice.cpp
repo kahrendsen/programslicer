@@ -3,6 +3,8 @@
 #include "SDG.h"
 #include "Slice.h"
 
+char Slice::ID = 0;
+
 bool Slice::runOnModule(Module &M)
 {
     SDG &sdg = getAnalysis<SDG>();

@@ -20,6 +20,7 @@
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include "CDG.h"
 #include "DirectedGraph.h"
 
 using namespace llvm;
@@ -64,10 +65,13 @@ namespace llvm {
     };
 
     /// SDG node type
-    // TODO: implement
     class SDGNode
     {
         public:
+            SDGNode(NodeAttr attr, Value *value) : attr(attr), value(value) {
+                assert(attr < SIZE);
+            }
+
             NodeAttr getAttr() const { return attr; }
             Value *getValue() const { return value; }
 
@@ -76,7 +80,7 @@ namespace llvm {
             Value *value;
     };
 
-    /// The class generates a control dependence graph for a function.
+    /// The class generates a system dependence graph for a function.
     class SDG : public ModulePass {
         public:
             typedef DirectedGraph<SDGNode, SDGEdge> SDG_t;
@@ -87,7 +91,12 @@ namespace llvm {
 
             virtual bool runOnModule(Module &F);
 
-            virtual void getAnalysisUsage(AnalysisUsage& AU) const;
+            virtual void getAnalysisUsage(AnalysisUsage& AU) const
+            {
+                AU.setPreservesCFG();
+                AU.addRequired<CDG>();
+            }
+
 
             SDG_t &getGraph() { return graph; }
 
@@ -95,9 +104,7 @@ namespace llvm {
             SDG_t graph;
     };
 
-    char SDG::ID = 0;
-
-    static RegisterPass<SDG> X("SDG", "SDG Pass",
+    static RegisterPass<SDG> B("SDG", "SDG Pass",
             true /* only looks at SFG */,
             true /* analysis pass */);
 } // end of anonymous namespace

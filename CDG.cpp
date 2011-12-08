@@ -2,6 +2,8 @@
 
 #include "CDG.h"
 
+char CDG::ID = 0;
+
 bool CDG::runOnFunction(Function &F)
 {
     errs() << "Function: " << F << "\n";

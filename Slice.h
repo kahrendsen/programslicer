@@ -58,8 +58,6 @@ namespace llvm {
         nodeSet_t markedNodes;
     };
 
-    char Slice::ID = 0;
-
     // TODO: check if not working
     static RegisterPass<Slice> A("Slice", "Slice Pass",
             true /* only looks at Slice */,

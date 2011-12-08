@@ -50,8 +50,6 @@ namespace llvm {
         _instGraph_t _instGraph;
     };
 
-    char CDG::ID = 0;
-
     static RegisterPass<CDG> X("CDG", "CDG Pass",
             false /* only looks at CFG */,
             true /* analysis pass */);
