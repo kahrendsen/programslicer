@@ -15,7 +15,7 @@
 #ifndef SDG_H
 #define SDG_H
 
-#include "llvm/Function.h"
+#include "llvm/Module.h"
 #include "llvm/Pass.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Support/raw_ostream.h"
@@ -68,6 +68,8 @@ namespace llvm {
     class SDGNode
     {
         public:
+            SDGNode() : attr(SIZE), value(NULL) {}
+
             SDGNode(NodeAttr attr, Value *value) : attr(attr), value(value) {
                 assert(attr < SIZE);
             }
@@ -101,7 +103,14 @@ namespace llvm {
             SDG_t &getGraph() { return graph; }
 
         private:
+            // The system dependence graph
             SDG_t graph;
+            // The map for all instruction nodes
+            std::map<Instruction *, SDGNode> instNodeMap;
+            // The map for all function entry nodes
+            std::map<Function *, SDGNode> entryNodeMap;
+
+            bool generateIntraDDG(Function &F);
     };
 
     static RegisterPass<SDG> B("SDG", "SDG Pass",

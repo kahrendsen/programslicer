@@ -1,5 +1,7 @@
 // Author Hao Wu and Ying-yu Chen
 
+#include "llvm/Support/InstIterator.h"
+
 #include "SDG.h"
 
 char SDG::ID = 0;
@@ -27,24 +29,61 @@ bool SDG::runOnModule(Module &M)
             if (S != NULL)
             {
                 // XXX: Memory leak
-                src = new SDGNode(instruction, S->getTerminator());
+                Instruction *I = S->getTerminator();
+                instNodeMap.insert(std::pair<Instruction*, SDGNode>(I, SDGNode(instruction, I)));
+                src = &instNodeMap[I];
             }
             else
             {
-                src = new SDGNode(entry, F);
+                entryNodeMap.insert(std::pair<Function*, SDGNode>(F, SDGNode(entry, F)));
+                src = &entryNodeMap[F];
             }
             for (BasicBlock::iterator i = D->begin(), e = D->end(); i != e; ++i)
             {
-                dst = new SDGNode(instruction, &*i);
+                Instruction *I = &*i;
+                instNodeMap.insert(std::pair<Instruction*, SDGNode>(I, SDGNode(instruction, I)));
+                dst = &instNodeMap[I];
                 graph.insert(src, dst);
             }
         }
+    }
+
+    // Step 1.2: Create DDG
+    for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
+    {
+        Function &F = *it;
+        generateIntraDDG(F);
     }
 
     // Step 2: INTERprocedure Analysis
     // Aux node for function call, etc.
     // Step X: TODO
     //
+    return false;
+}
+
+bool SDG::generateIntraDDG(Function &F)
+{
+    // TODO: Consider pointers
+    SDGNode *src, *dst;
+    // Use use-def chain in LLVM
+    for (inst_iterator I = inst_begin(F), E = inst_end(F); I != E; ++I)
+    {
+        errs() << *I << "\n";
+        for (Value::use_iterator i = I->use_begin(), e = I->use_end(); i != e; ++i)
+        {
+            if (Instruction *Inst = dyn_cast<Instruction>(*i)) {
+                errs() << "I is used in instruction:\n";
+                errs() << *Inst << "\n";
+                // Assert that I has been inserted during CDG construction
+                assert(instNodeMap.find(&*I) != instNodeMap.end());
+                assert(instNodeMap.find(&*Inst) != instNodeMap.end());
+                src = &instNodeMap[&*I];
+                dst = &instNodeMap[Inst];
+                graph.insert(src, dst);
+            }
+        }
+    }
     return false;
 }
 
