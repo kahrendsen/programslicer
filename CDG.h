@@ -29,9 +29,12 @@ namespace llvm {
     /// The class generates a control dependence graph for a function.
     class CDG : public FunctionPass {
     public:
+        typedef DirectedGraph<BasicBlock, void> _bbGraph_t;
+        typedef DirectedGraph<Instruction, void> _instGraph_t;
+
         // Pass Indentifier 
         static char ID;
-        CDG() : FunctionPass(ID), _bbGraph("blockCDG"), _instGraph("instructionCDG") {}
+        CDG() : FunctionPass(ID), _bbGraph("blockCDG")/*, _instGraph("instructionCDG")*/ {}
 
         virtual bool runOnFunction(Function &F);
 
@@ -41,13 +44,14 @@ namespace llvm {
             AU.addRequired<PostDominatorTree>();
         }
 
+        //_instGraph_t getInstGraph() const { return _instGraph; } 
+        _bbGraph_t getBBGraph() const { return _bbGraph; }
+
     private:
         // The control dependence graph based on basic blocks
-        typedef DirectedGraph<BasicBlock, void> _bbGraph_t;
         _bbGraph_t _bbGraph;
         // The control dependence graph based on instructions
-        typedef DirectedGraph<Instruction, void> _instGraph_t;
-        _instGraph_t _instGraph;
+        //_instGraph_t _instGraph;
     };
 
     static RegisterPass<CDG> X("CDG", "CDG Pass",

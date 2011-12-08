@@ -14,8 +14,8 @@ bool Slice::runOnModule(Module &M)
 bool Slice::markVerticesOfSlice(SDG &sdg, Slice::nodeSet_t &resultSet)
 {
     // Initialize result list
-    const SDG::SDG_t &graph = sdg.getGraph();
-    const SDG::SDG_t::nodeSet_t &nodeSet = graph.getNodeSet();
+    SDG::SDG_t &graph = sdg.getGraph();
+    SDG::SDG_t::nodeSet_t &nodeSet = graph.getNodeSet();
 
     // Step 1: Slice without descending into called procedure
     markReachingVertices(sdg, resultSet, nodeSet,

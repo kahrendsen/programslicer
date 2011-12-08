@@ -37,17 +37,17 @@ namespace llvm {
             // TODO: erase node set entry
         }
 
-        const nodeMap_t& getSuccSet(NodeT* A)
+        nodeMap_t& getSuccSet(NodeT* A)
         {
             return succMap[A];
         }
 
-        const nodeMap_t& getPredSet(NodeT* A)
+        nodeMap_t& getPredSet(NodeT* A)
         {
             return predMap[A];
         }
 
-        const nodeSet_t& getNodeSet() const
+        nodeSet_t& getNodeSet()
         {
             return nodeSet;
         }

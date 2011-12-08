@@ -47,6 +47,7 @@ bool CDG::runOnFunction(Function &F)
     errs() << _bbGraph;
 
     // Make instruction graph
+#if 0
     Instruction *src, *dst;
     for (Function::iterator fIt = F.begin(), e = F.end(); fIt != e; ++fIt)
     {
@@ -73,6 +74,7 @@ bool CDG::runOnFunction(Function &F)
     }
 
     errs() << _instGraph;
+#endif
 
     return false;
 }
