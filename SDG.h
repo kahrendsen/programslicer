@@ -103,7 +103,6 @@ namespace llvm {
                 AU.addRequired<CDG>();
             }
 
-
             SDG_t &getGraph() { return graph; }
 
         private:

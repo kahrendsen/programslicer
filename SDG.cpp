@@ -7,47 +7,53 @@
 char SDG::ID = 0;
 
 static RegisterPass<SDG> B("SDG", "SDG Pass",
-        true /* only looks at SFG */,
-        true /* analysis pass */);
+        false /* only looks at SFG */,
+        false /* analysis pass */);
 
 bool SDG::runOnModule(Module &M)
 {
+    SDGNode *src, *dst;
+
     // Step 1: INTRAprocedure Analysis
     // Step 1.1: Insert CDG
-    CDG &cdg = getAnalysis<CDG>();
-    CDG::_bbGraph_t _bbGraph = cdg.getBBGraph();
-    errs() << cdg.getBBGraph();
-
-    std::set<BasicBlock *> &nodeSet = _bbGraph.getNodeSet();
-    SDGNode *src, *dst;
-    for (std::set<BasicBlock *>::iterator fIt = nodeSet.begin(),
-            e = nodeSet.end(); fIt != e; ++fIt)
+    for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
-        BasicBlock *D = *fIt;
-        Function *F = D->getParent();
-        CDG::_bbGraph_t::nodeMap_t &predSet = _bbGraph.getPredSet(D);
-        for (CDG::_bbGraph_t::nodeMap_t::const_iterator it = predSet.begin(),
-                et = predSet.end(); it != et; ++it)
+        Function &F = *it;
+        CDG &cdg = getAnalysis<CDG>(F);
+
+        CDG::_bbGraph_t _bbGraph = cdg.getBBGraph();
+        errs() << cdg.getBBGraph();
+
+        std::set<BasicBlock *> &nodeSet = _bbGraph.getNodeSet();
+        for (std::set<BasicBlock *>::iterator fIt = nodeSet.begin(),
+                e = nodeSet.end(); fIt != e; ++fIt)
         {
-            BasicBlock *S = it->first;
-            if (S != NULL)
+            BasicBlock *D = *fIt;
+            Function *F = D->getParent();
+            CDG::_bbGraph_t::nodeMap_t &predSet = _bbGraph.getPredSet(D);
+            for (CDG::_bbGraph_t::nodeMap_t::const_iterator it = predSet.begin(),
+                    et = predSet.end(); it != et; ++it)
             {
-                Instruction *I = S->getTerminator();
-                instNodeMap.insert(std::pair<Instruction*, SDGNode>(I, SDGNode(instruction, I)));
-                src = &instNodeMap[I];
-            }
-            else
-            {
-                entryNodeMap.insert(std::pair<Function*, SDGNode>(F, SDGNode(entry, F)));
-                src = &entryNodeMap[F];
-            }
-            for (BasicBlock::iterator i = D->begin(), e = D->end(); i != e; ++i)
-            {
-                Instruction *I = &*i;
-                instNodeMap.insert(std::pair<Instruction*, SDGNode>(I, SDGNode(instruction, I)));
-                dst = &instNodeMap[I];
-                //XXX: Memory leak
-                graph.insert(src, dst, new SDGEdge(control));
+                BasicBlock *S = it->first;
+                if (S != NULL)
+                {
+                    Instruction *I = S->getTerminator();
+                    instNodeMap.insert(std::pair<Instruction*, SDGNode>(I, SDGNode(instruction, I)));
+                    src = &instNodeMap[I];
+                }
+                else
+                {
+                    entryNodeMap.insert(std::pair<Function*, SDGNode>(F, SDGNode(entry, F)));
+                    src = &entryNodeMap[F];
+                }
+                for (BasicBlock::iterator i = D->begin(), e = D->end(); i != e; ++i)
+                {
+                    Instruction *I = &*i;
+                    instNodeMap.insert(std::pair<Instruction*, SDGNode>(I, SDGNode(instruction, I)));
+                    dst = &instNodeMap[I];
+                    //XXX: Memory leak
+                    graph.insert(src, dst, new SDGEdge(control));
+                }
             }
         }
     }
