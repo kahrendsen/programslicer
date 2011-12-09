@@ -15,6 +15,8 @@
 #ifndef SDG_H
 #define SDG_H
 
+#include "llvm/Argument.h"
+#include "llvm/Instructions.h"
 #include "llvm/Module.h"
 #include "llvm/Pass.h"
 #include "llvm/Analysis/PostDominators.h"
@@ -43,6 +45,8 @@ namespace llvm {
     class SDGEdge
     {
         public:
+            SDGEdge() : attr(0) {}
+            SDGEdge(int attr) : attr(attr) {}
             bool hasControl() const;
             bool hasFlow() const;
             bool hasCall() const;
@@ -77,7 +81,7 @@ namespace llvm {
             NodeAttr getAttr() const { return attr; }
             Value *getValue() const { return value; }
 
-        private:
+        protected:
             NodeAttr attr;
             Value *value;
     };
@@ -109,6 +113,10 @@ namespace llvm {
             std::map<Instruction *, SDGNode> instNodeMap;
             // The map for all function entry nodes
             std::map<Function *, SDGNode> entryNodeMap;
+            // The map for all callee input aux nodes
+            std::map<Argument *, SDGNode> calleeInputNodeMap;
+            // The map for all caller input aux nodes
+            std::map<CallInst *, std::map<Value *, SDGNode> >callerInputNodeMap;
 
             bool generateIntraDDG(Function &F);
     };
