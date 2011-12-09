@@ -4,6 +4,10 @@
 
 char CDG::ID = 0;
 
+static RegisterPass<CDG> X("CDG", "CDG Pass",
+        false /* only looks at CFG */,
+        true /* analysis pass */);
+
 bool CDG::runOnFunction(Function &F)
 {
     errs() << "Function: " << F << "\n";

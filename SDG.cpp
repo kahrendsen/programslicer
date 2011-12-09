@@ -6,6 +6,10 @@
 
 char SDG::ID = 0;
 
+static RegisterPass<SDG> B("SDG", "SDG Pass",
+        true /* only looks at SFG */,
+        true /* analysis pass */);
+
 bool SDG::runOnModule(Module &M)
 {
     // Step 1: INTRAprocedure Analysis

@@ -120,10 +120,6 @@ namespace llvm {
 
             bool generateIntraDDG(Function &F);
     };
-
-    static RegisterPass<SDG> B("SDG", "SDG Pass",
-            true /* only looks at SFG */,
-            true /* analysis pass */);
 } // end of anonymous namespace
 
 #endif // SDG_H

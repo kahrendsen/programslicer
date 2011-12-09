@@ -5,6 +5,10 @@
 
 char Slice::ID = 0;
 
+static RegisterPass<Slice> A("Slice", "Slice Pass",
+        true /* only looks at Slice */,
+        true /* analysis pass */);
+
 bool Slice::runOnModule(Module &M)
 {
     SDG &sdg = getAnalysis<SDG>();

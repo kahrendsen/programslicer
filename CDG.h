@@ -53,10 +53,6 @@ namespace llvm {
         // The control dependence graph based on instructions
         //_instGraph_t _instGraph;
     };
-
-    static RegisterPass<CDG> X("CDG", "CDG Pass",
-            false /* only looks at CFG */,
-            true /* analysis pass */);
 } // end of anonymous namespace
 
 #endif // CDG_H

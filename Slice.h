@@ -57,11 +57,6 @@ namespace llvm {
 
         nodeSet_t markedNodes;
     };
-
-    // TODO: check if not working
-    static RegisterPass<Slice> A("Slice", "Slice Pass",
-            true /* only looks at Slice */,
-            true /* analysis pass */);
 } // end of anonymous namespace
 
 #endif // SLICE_H
