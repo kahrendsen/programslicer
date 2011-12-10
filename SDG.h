@@ -54,6 +54,8 @@ namespace llvm {
             bool hashasParamOut() const;
             bool ifMask(int mask) const { return attr & mask; }
 
+            void print(raw_ostream &O) const;
+
         private:
             int attr;
     };
@@ -80,6 +82,8 @@ namespace llvm {
 
             NodeAttr getAttr() const { return attr; }
             Value *getValue() const { return value; }
+
+            void print(raw_ostream &O) const;
 
         protected:
             NodeAttr attr;
@@ -116,10 +120,27 @@ namespace llvm {
             std::map<Argument *, SDGNode> calleeInputNodeMap;
             // The map for all caller input aux nodes
             std::map<CallInst *, std::map<Value *, SDGNode> >callerInputNodeMap;
+            // The map for all callee output aux nodes
+            std::map<Function *, SDGNode> calleeOutputNodeMap;
+            // The map for all caller output aux nodes
+            std::map<CallInst *, std::map<Value *, SDGNode> >callerOutputNodeMap;
 
             bool generateIntraDDG(Function &F);
     };
-} // end of anonymous namespace
+
+    inline raw_ostream& operator <<(raw_ostream &OS, const SDGEdge &edge)
+    {
+        edge.print(OS);
+        return OS;
+    }
+
+    inline raw_ostream& operator <<(raw_ostream &OS, const SDGNode &node)
+    {
+        node.print(OS);
+        return OS;
+    }
+
+}
 
 #endif // SDG_H
 

@@ -10,6 +10,15 @@ static RegisterPass<SDG> B("SDG", "SDG Pass",
         false /* only looks at SFG */,
         false /* analysis pass */);
 
+const char *nodeAttrString[] =
+{
+    "instruction",
+    "entry",
+    "callerAux",
+    "calleeAux",
+    "INVALID"
+};
+
 bool SDG::runOnModule(Module &M)
 {
     SDGNode *src, *dst;
@@ -94,6 +103,8 @@ bool SDG::runOnModule(Module &M)
             calleeInputNodeMap.insert(std::pair<Argument*, SDGNode>(
                         arg, SDGNode(calleeAux, arg)));
         }
+        calleeOutputNodeMap.insert(std::pair<Function*, SDGNode>(
+                    &F, SDGNode(calleeAux, &F)));
 
         // Add caller aux nodes and relationships
         for (inst_iterator It = inst_begin(F), E = inst_end(F); It != E; ++It)
@@ -101,7 +112,8 @@ bool SDG::runOnModule(Module &M)
             Instruction *I = &*It;
             if (CallInst *CI = dyn_cast<CallInst>(I))
             {
-                std::map<Value *, SDGNode> &callerMap = callerInputNodeMap[CI];
+                std::map<Value *, SDGNode> &callerInputMap = callerInputNodeMap[CI];
+                std::map<Value *, SDGNode> &callerOutputMap = callerOutputNodeMap[CI];
                 Function *CF = CI->getCalledFunction();
 //                Function::ArgumentListType &CFAL = CF->getArgumentList();
                 // Step 2.1: Add call edges
@@ -123,21 +135,30 @@ bool SDG::runOnModule(Module &M)
                     assert(arg_it != arg_end);
                     // Add aux nodes for callee input
                     Value *callerArg = CI->getArgOperand(i);
-                    callerMap.insert(std::pair<Value *, SDGNode>(
+                    callerInputMap.insert(std::pair<Value *, SDGNode>(
                                 callerArg,
                                 SDGNode(callerAux, callerArg)));
                     // Add aux edges for callee and caller input
-                    src = &callerMap[callerArg];
+                    src = &callerInputMap[callerArg];
                     dst = &calleeInputNodeMap[calleeArg];
                     // XXX: Memory leak
                     graph.insert(src, dst, new SDGEdge(paramIn));
-                    // TODO: Use pointer analysis to determine output aux nodes
+                    // TODO: Add output aux nodes using Pointer Analysis
                 }
-                // TODO: Add output aux nodes using Pointer Analysis
+                // Add return value as output aux nodes
+                callerInputMap.insert(std::pair<Value *, SDGNode>(
+                            CI,
+                            SDGNode(callerAux, CI)));
+                src = &callerOutputMap[CI];
+                dst = &calleeOutputNodeMap[&F];
+                // XXX: Memory leak
+                graph.insert(src, dst, new SDGEdge(paramOut));
+
                 // Step 2.3: TODO: Add relationship between aux nodes
             }
         }
     }
+    errs() << graph << "\n";
     return false;
 }
 
@@ -165,5 +186,20 @@ bool SDG::generateIntraDDG(Function &F)
         }
     }
     return false;
+}
+
+void SDGNode::print(raw_ostream &OS) const
+{
+    OS << nodeAttrString[attr] << ":";
+    if (value == NULL)
+        OS << "NULL";
+    else
+        OS << *value;
+    OS << "\n";
+}
+
+void SDGEdge::print(raw_ostream &OS) const
+{
+    OS << attr;
 }
 
