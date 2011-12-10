@@ -18,23 +18,38 @@ bool SDG::runOnModule(Module &M)
     // Step 1.1: Insert CDG
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
+        if (it->isDeclaration())
+        {
+            continue;
+        }
         Function &F = *it;
+        errs() << "F addr = " << &F << "\n";
         CDG &cdg = getAnalysis<CDG>(F);
+        errs() << "F addr2 = " << &F << "\n";
 
         CDG::_bbGraph_t _bbGraph = cdg.getBBGraph();
         errs() << cdg.getBBGraph();
 
         std::set<BasicBlock *> &nodeSet = _bbGraph.getNodeSet();
+        errs() << "create CDG\n";
+        //errs() << nodeSet.size() << "\n";
         for (std::set<BasicBlock *>::iterator fIt = nodeSet.begin(),
                 e = nodeSet.end(); fIt != e; ++fIt)
         {
             BasicBlock *D = *fIt;
+            if (D == NULL)
+            {
+                continue;
+            }
+            errs() << "D addr = " << D << "\n";
             Function *F = D->getParent();
+            //errs() << "F=" << *F <<"\n";
             CDG::_bbGraph_t::nodeMap_t &predSet = _bbGraph.getPredSet(D);
             for (CDG::_bbGraph_t::nodeMap_t::const_iterator it = predSet.begin(),
                     et = predSet.end(); it != et; ++it)
             {
                 BasicBlock *S = it->first;
+                errs() << "S addr = " << S << "\n";
                 if (S != NULL)
                 {
                     Instruction *I = S->getTerminator();
@@ -58,6 +73,7 @@ bool SDG::runOnModule(Module &M)
         }
     }
 
+    errs() << "create DDG\n";
     // Step 1.2: Create DDG
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
@@ -65,6 +81,7 @@ bool SDG::runOnModule(Module &M)
         generateIntraDDG(F);
     }
 
+    errs() << "create INTER\n";
     // Step 2: INTERprocedure Analysis
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
@@ -116,7 +133,7 @@ bool SDG::runOnModule(Module &M)
                     graph.insert(src, dst, new SDGEdge(paramIn));
                     // TODO: Use pointer analysis to determine output aux nodes
                 }
-                // TODO: Add output aux nodes
+                // TODO: Add output aux nodes using Pointer Analysis
                 // Step 2.3: TODO: Add relationship between aux nodes
             }
         }
