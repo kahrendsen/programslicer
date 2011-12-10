@@ -173,8 +173,8 @@ bool SDG::generateIntraDDG(Function &F)
         for (Value::use_iterator i = I->use_begin(), e = I->use_end(); i != e; ++i)
         {
             if (Instruction *Inst = dyn_cast<Instruction>(*i)) {
-                errs() << "I is used in instruction:\n";
-                errs() << *Inst << "\n";
+//                errs() << "I is used in instruction:\n";
+//                errs() << *Inst << "\n";
                 // Assert that I has been inserted during CDG construction
                 assert(instNodeMap.find(&*I) != instNodeMap.end());
                 assert(instNodeMap.find(&*Inst) != instNodeMap.end());

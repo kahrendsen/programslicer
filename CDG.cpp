@@ -10,7 +10,7 @@ static RegisterPass<CDG> X("CDG", "CDG Pass",
 
 bool CDG::runOnFunction(Function &F)
 {
-    errs() << "Function: " << F << "\n";
+//    errs() << "Function: " << F << "\n";
 
     PostDominatorTree &PDT = getAnalysis<PostDominatorTree>();
 
@@ -48,7 +48,7 @@ bool CDG::runOnFunction(Function &F)
             _bbGraph.insert(NULL, B);
         }
     }
-    errs() << _bbGraph;
+//    errs() << _bbGraph;
 
     // Make instruction graph
 #if 0

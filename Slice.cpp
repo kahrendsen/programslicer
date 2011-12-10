@@ -30,7 +30,7 @@ bool Slice::markVerticesOfSlice(SDG &sdg, Slice::nodeSet_t &resultSet)
     return false;
 }
 
-bool markReachingVertices(SDG &sdg, Slice::nodeSet_t &resultSet,
+bool Slice::markReachingVertices(SDG &sdg, Slice::nodeSet_t &resultSet,
         Slice::nodeSet_t workSet, int mask)
 {
     while (!workSet.empty())
