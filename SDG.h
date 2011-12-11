@@ -25,6 +25,8 @@
 #include "CDG.h"
 #include "DirectedGraph.h"
 
+#include "PA/PtsAnders.h"
+
 using namespace llvm;
 
 namespace llvm {
@@ -124,8 +126,14 @@ namespace llvm {
             std::map<Function *, SDGNode> calleeOutputNodeMap;
             // The map for all caller output aux nodes
             std::map<CallInst *, std::map<Value *, SDGNode> >callerOutputNodeMap;
+            // The map which records the def nodes of an allocation
+            std::map<Instruction *, std::set<SDGNode *> > defNodeMap;
+            // PtsSet
+            PtsAnders pts;
 
+						bool generateDefNodeMap(Module &M);
             bool generateIntraDDG(Function &F);
+            
     };
 
     inline raw_ostream& operator <<(raw_ostream &OS, const SDGEdge &edge)

@@ -7,8 +7,8 @@
 char SDG::ID = 0;
 
 static RegisterPass<SDG> B("SDG", "SDG Pass",
-        false /* only looks at SFG */,
-        false /* analysis pass */);
+        true /* only looks at SFG */,
+        true /* analysis pass */);
 
 const char *nodeAttrString[] =
 {
@@ -22,6 +22,12 @@ const char *nodeAttrString[] =
 bool SDG::runOnModule(Module &M)
 {
     SDGNode *src, *dst;
+    
+    errs() << "pts: begin\n";
+    pts.runOnModule(M);
+    errs() << "pts: end\n";
+    
+    // pts.getPtsSet(Value* V, vector<Value* >& set);
 
     // Step 1: INTRAprocedure Analysis
     // Step 1.1: Insert CDG
@@ -119,8 +125,8 @@ bool SDG::runOnModule(Module &M)
                 // Step 2.1: Add call edges
                 src = &instNodeMap[CI];
                 dst = &entryNodeMap[CF];
-                assert(src.getValue());
-                assert(dst.getValue());
+                assert(src->getValue());
+                assert(dst->getValue());
                 //XXX: Memory leak
                 graph.insert(src, dst, new SDGEdge(call));
                 // Step 2.2: Add aux nodes for function call.
@@ -132,7 +138,7 @@ bool SDG::runOnModule(Module &M)
                     // The callee should have at least the same number of
                     // argument as the caller, otherwise the function call is
                     // invalid.
-                    assert(arg_it != arg_end);
+                    //assert(arg_it != arg_end);
                     // Add aux nodes for callee input
                     Value *callerArg = CI->getArgOperand(i);
                     callerInputMap.insert(std::pair<Value *, SDGNode>(
@@ -164,9 +170,10 @@ bool SDG::runOnModule(Module &M)
 
 bool SDG::generateIntraDDG(Function &F)
 {
+    // XXX: Use use-def chain
     // TODO: Consider pointers
     SDGNode *src, *dst;
-    // Use use-def chain in LLVM
+    // Use du chain in LLVM
     for (inst_iterator I = inst_begin(F), E = inst_end(F); I != E; ++I)
     {
         errs() << *I << "\n";

@@ -12,7 +12,10 @@ static RegisterPass<Slice> A("Slice", "Slice Pass",
 bool Slice::runOnModule(Module &M)
 {
     SDG &sdg = getAnalysis<SDG>();
-    return markVerticesOfSlice(sdg, markedNodes);
+    markVerticesOfSlice(sdg, markedNodes);
+    // TODO: implement
+    //sliceModule(sdg, markedNodes);
+    return true;
 }
 
 bool Slice::markVerticesOfSlice(SDG &sdg, Slice::nodeSet_t &resultSet)
