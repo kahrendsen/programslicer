@@ -1,10 +1,10 @@
 # Makefile for testhello pass
 
 # Path to top level of LLVM hierarchy
-LEVEL = ../../..
+LEVEL = ../../../..
 
 # Name of the library to build
-LIBRARYNAME = ProgramSlicing
+LIBRARYNAME = testPA
 
 # Make the shared library become a loadable module so the tools can
 # dlopen/dlsym on the resulting library.
