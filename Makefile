@@ -15,4 +15,4 @@ LOADABLE_MODULE = 1
 # Include the makefile implementation stuff
 include $(LEVEL)/Makefile.common
 
-LDFLAGS += -lPointerAnalysis
+#LDFLAGS += -lPointerAnalysis

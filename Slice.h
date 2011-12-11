@@ -55,6 +55,9 @@ namespace llvm {
         static bool markReachingVertices(SDG &sdg, nodeSet_t &resultSet,
                 nodeSet_t workSet, int mask);
 
+        /// Slice only nodes within the markedNodes
+        void sliceModule(SDG &sdg, Module &M);
+
         nodeSet_t markedNodes;
     };
 } // end of anonymous namespace

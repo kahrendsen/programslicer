@@ -1,4 +1,6 @@
 // Author: Hao Wu
+//
+#include "llvm/Support/InstIterator.h"
 
 #include "SDG.h"
 #include "Slice.h"
@@ -14,8 +16,50 @@ bool Slice::runOnModule(Module &M)
     SDG &sdg = getAnalysis<SDG>();
     markVerticesOfSlice(sdg, markedNodes);
     // TODO: implement
-    //sliceModule(sdg, markedNodes);
+    sliceModule(sdg, M);
+    errs() << M << "\n";
     return true;
+}
+
+void Slice::sliceModule(SDG &sdg, Module &M)
+{
+    std::map<Instruction *, SDGNode> &instMap = sdg.getInstNodeMap();
+    std::map<Function *, SDGNode> &entryMap = sdg.getEntryNodeMap();
+    std::vector<Function *> functionToRemove;
+    std::vector<Instruction *> instructionToRemove;
+    for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
+    {
+        SDGNode *funcEntryNode = &entryMap[&*it];
+        assert(funcEntryNode->attr == entry);
+        if (markedNodes.find(funcEntryNode) == markedNodes.end())
+        {
+            functionToRemove.push_back(&*it);
+        }
+    }
+    for (std::vector<Function *>::iterator it = functionToRemove.begin(),
+            e = functionToRemove.end(); it != e; ++it)
+    {
+        (*it)->removeFromParent();
+    }
+    for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
+    {
+        for (inst_iterator jt = inst_begin(*it), et = inst_end(*it);
+                jt != et; ++jt)
+        {
+            Instruction *I = &*jt;
+            SDGNode *instNode = &instMap[I];
+            assert(instNode->attr == instruction);
+            if (markedNodes.find(instNode) == markedNodes.end())
+            {
+                instructionToRemove.push_back(I);
+            }
+        }
+    }
+    for (std::vector<Instruction *>::iterator it = instructionToRemove.begin(),
+            e = instructionToRemove.end(); it != e; ++it)
+    {
+        (*it)->removeFromParent();
+    }
 }
 
 bool Slice::markVerticesOfSlice(SDG &sdg, Slice::nodeSet_t &resultSet)

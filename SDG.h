@@ -25,7 +25,7 @@
 #include "CDG.h"
 #include "DirectedGraph.h"
 
-#include "PA/PtsAnders.h"
+//#include "PA/PtsAnders.h"
 
 using namespace llvm;
 
@@ -111,6 +111,16 @@ namespace llvm {
 
             SDG_t &getGraph() { return graph; }
 
+            std::map<Instruction *, SDGNode> &getInstNodeMap()
+            {
+                return instNodeMap;
+            }
+
+            std::map<Function *, SDGNode> &getEntryNodeMap()
+            {
+                return entryNodeMap;
+            }
+
         private:
             // The system dependence graph
             SDG_t graph;
@@ -129,11 +139,11 @@ namespace llvm {
             // The map which records the def nodes of an allocation
             std::map<Instruction *, std::set<SDGNode *> > defNodeMap;
             // PtsSet
-            PtsAnders pts;
+//            PtsAnders pts;
 
-						bool generateDefNodeMap(Module &M);
+            bool generateDefNodeMap(Module &M);
             bool generateIntraDDG(Function &F);
-            
+
     };
 
     inline raw_ostream& operator <<(raw_ostream &OS, const SDGEdge &edge)

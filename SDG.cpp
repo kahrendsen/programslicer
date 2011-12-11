@@ -22,15 +22,15 @@ const char *nodeAttrString[] =
 bool SDG::runOnModule(Module &M)
 {
     SDGNode *src, *dst;
-    
+
     errs() << "pts: begin\n";
-    pts.runOnModule(M);
+    //    pts.runOnModule(M);
     errs() << "pts: end\n";
-    
+
     // pts.getPtsSet(Value* V, vector<Value* >& set);
 
-    // Step 1: INTRAprocedure Analysis
-    // Step 1.1: Insert CDG
+    // Step 1: INTRAprocedure Analysis - CDG
+    errs() << "create CDG\n";
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
         if (it->isDeclaration())
@@ -38,16 +38,13 @@ bool SDG::runOnModule(Module &M)
             continue;
         }
         Function &F = *it;
-        errs() << "F addr = " << &F << "\n";
         CDG &cdg = getAnalysis<CDG>(F);
-        errs() << "F addr2 = " << &F << "\n";
 
+        // Add normal control edges
         CDG::_bbGraph_t _bbGraph = cdg.getBBGraph();
         errs() << cdg.getBBGraph();
 
         std::set<BasicBlock *> &nodeSet = _bbGraph.getNodeSet();
-        errs() << "create CDG\n";
-        //errs() << nodeSet.size() << "\n";
         for (std::set<BasicBlock *>::iterator fIt = nodeSet.begin(),
                 e = nodeSet.end(); fIt != e; ++fIt)
         {
@@ -86,14 +83,25 @@ bool SDG::runOnModule(Module &M)
                 }
             }
         }
-    }
 
-    errs() << "create DDG\n";
-    // Step 1.2: Create DDG
-    for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
-    {
-        Function &F = *it;
-        generateIntraDDG(F);
+        // Add Callee aux nodes
+        src = &entryNodeMap[&F];
+        for (Function::arg_iterator arg_it = F.arg_begin(), arg_e = F.arg_end();
+                arg_it != arg_e; ++arg_it)
+        {
+            Argument *arg = &*arg_it;
+            calleeInputNodeMap.insert(std::pair<Argument*, SDGNode>(
+                        arg, SDGNode(calleeAux, arg)));
+            // Add Control Edge
+            dst = &calleeInputNodeMap[arg];
+            // XXX: Memory Leak
+            graph.insert(src, dst, new SDGEdge(control));
+        }
+        calleeOutputNodeMap.insert(std::pair<Function*, SDGNode>(
+                    &F, SDGNode(calleeAux, &F)));
+        dst = &calleeOutputNodeMap[&F];
+        // XXX: Memory Leak
+        graph.insert(src, dst, new SDGEdge(control));
     }
 
     errs() << "create INTER\n";
@@ -101,16 +109,6 @@ bool SDG::runOnModule(Module &M)
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
         Function &F = *it;
-        // Add Callee aux nodes
-        for (Function::arg_iterator arg_it = F.arg_begin(), arg_e = F.arg_end();
-                arg_it != arg_e; ++arg_it)
-        {
-            Argument *arg = &*arg_it;
-            calleeInputNodeMap.insert(std::pair<Argument*, SDGNode>(
-                        arg, SDGNode(calleeAux, arg)));
-        }
-        calleeOutputNodeMap.insert(std::pair<Function*, SDGNode>(
-                    &F, SDGNode(calleeAux, &F)));
 
         // Add caller aux nodes and relationships
         for (inst_iterator It = inst_begin(F), E = inst_end(F); It != E; ++It)
@@ -121,7 +119,7 @@ bool SDG::runOnModule(Module &M)
                 std::map<Value *, SDGNode> &callerInputMap = callerInputNodeMap[CI];
                 std::map<Value *, SDGNode> &callerOutputMap = callerOutputNodeMap[CI];
                 Function *CF = CI->getCalledFunction();
-//                Function::ArgumentListType &CFAL = CF->getArgumentList();
+                //                Function::ArgumentListType &CFAL = CF->getArgumentList();
                 // Step 2.1: Add call edges
                 src = &instNodeMap[CI];
                 dst = &entryNodeMap[CF];
@@ -144,12 +142,15 @@ bool SDG::runOnModule(Module &M)
                     callerInputMap.insert(std::pair<Value *, SDGNode>(
                                 callerArg,
                                 SDGNode(callerAux, callerArg)));
+                    // Add control edges
+                    src = &instNodeMap[CI];
+                    dst = &callerInputMap[callerArg];
+                    graph.insert(src, dst, new SDGEdge(control));
                     // Add aux edges for callee and caller input
                     src = &callerInputMap[callerArg];
                     dst = &calleeInputNodeMap[calleeArg];
                     // XXX: Memory leak
                     graph.insert(src, dst, new SDGEdge(paramIn));
-                    // TODO: Add output aux nodes using Pointer Analysis
                 }
                 // Add return value as output aux nodes
                 callerInputMap.insert(std::pair<Value *, SDGNode>(
@@ -159,34 +160,60 @@ bool SDG::runOnModule(Module &M)
                 dst = &calleeOutputNodeMap[&F];
                 // XXX: Memory leak
                 graph.insert(src, dst, new SDGEdge(paramOut));
-
-                // Step 2.3: TODO: Add relationship between aux nodes
             }
         }
     }
+
+    errs() << "create DDG\n";
+    // Step 3: Create DDG without pointer analysis
+    for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
+    {
+        Function &F = *it;
+        generateIntraDDG(F);
+    }
+
     errs() << graph << "\n";
     return false;
 }
 
 bool SDG::generateIntraDDG(Function &F)
 {
-    // XXX: Use use-def chain
     // TODO: Consider pointers
     SDGNode *src, *dst;
     // Use du chain in LLVM
     for (inst_iterator I = inst_begin(F), E = inst_end(F); I != E; ++I)
     {
         errs() << *I << "\n";
+#if 0
         for (Value::use_iterator i = I->use_begin(), e = I->use_end(); i != e; ++i)
         {
             if (Instruction *Inst = dyn_cast<Instruction>(*i)) {
-//                errs() << "I is used in instruction:\n";
-//                errs() << *Inst << "\n";
                 // Assert that I has been inserted during CDG construction
                 assert(instNodeMap.find(&*I) != instNodeMap.end());
                 assert(instNodeMap.find(&*Inst) != instNodeMap.end());
                 src = &instNodeMap[&*I];
                 dst = &instNodeMap[Inst];
+                //XXX: Memory leak
+                graph.insert(src, dst, new SDGEdge(flow));
+            }
+        }
+#endif
+        assert(instNodeMap.find(&*I) != instNodeMap.end());
+        dst = &instNodeMap[&*I];
+        for (User::op_iterator i = I->op_begin(), e = I->op_end(); i != e; ++i)
+        {
+            Value *def = *i;
+            if (Instruction *Inst = dyn_cast<Instruction>(def))
+            {
+                assert(instNodeMap.find(Inst) != instNodeMap.end());
+                src = &instNodeMap[Inst];
+                //XXX: Memory leak
+                graph.insert(src, dst, new SDGEdge(flow));
+            }
+            else if (Argument *arg = dyn_cast<Argument>(def))
+            {
+                assert(calleeInputNodeMap.find(arg) != calleeInputNodeMap.end());
+                src = &calleeInputNodeMap[arg];
                 //XXX: Memory leak
                 graph.insert(src, dst, new SDGEdge(flow));
             }
