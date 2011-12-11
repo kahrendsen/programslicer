@@ -24,10 +24,8 @@ bool SDG::runOnModule(Module &M)
     SDGNode *src, *dst;
 
     errs() << "pts: begin\n";
-    //    pts.runOnModule(M);
+    pts.runOnModule(M);
     errs() << "pts: end\n";
-
-    // pts.getPtsSet(Value* V, vector<Value* >& set);
 
     // Step 1: INTRAprocedure Analysis - CDG
     errs() << "create CDG\n";
@@ -172,6 +170,10 @@ bool SDG::runOnModule(Module &M)
         generateIntraDDG(F);
     }
 
+    // Step 4: Create DDG with pointer analysis
+    generateDefNodeMap(M);
+    generatePointerEdges(M);
+
     errs() << graph << "\n";
     return false;
 }
@@ -184,20 +186,6 @@ bool SDG::generateIntraDDG(Function &F)
     for (inst_iterator I = inst_begin(F), E = inst_end(F); I != E; ++I)
     {
         errs() << *I << "\n";
-#if 0
-        for (Value::use_iterator i = I->use_begin(), e = I->use_end(); i != e; ++i)
-        {
-            if (Instruction *Inst = dyn_cast<Instruction>(*i)) {
-                // Assert that I has been inserted during CDG construction
-                assert(instNodeMap.find(&*I) != instNodeMap.end());
-                assert(instNodeMap.find(&*Inst) != instNodeMap.end());
-                src = &instNodeMap[&*I];
-                dst = &instNodeMap[Inst];
-                //XXX: Memory leak
-                graph.insert(src, dst, new SDGEdge(flow));
-            }
-        }
-#endif
         assert(instNodeMap.find(&*I) != instNodeMap.end());
         dst = &instNodeMap[&*I];
         for (User::op_iterator i = I->op_begin(), e = I->op_end(); i != e; ++i)
@@ -220,6 +208,56 @@ bool SDG::generateIntraDDG(Function &F)
         }
     }
     return false;
+}
+
+void generateDefNodeMap(Module &M)
+{
+    for (Module::iterator mi = M.begin(), me = M.end(); mi != me; ++mi)
+    {
+        Function &F = *mi;
+        for (inst_iterator I = inst_being(F), E = inst_end(F); I != E; ++I)
+        {
+           if (I->getOpcode() == Instruction::Store)
+           {
+                StoreInst *SI = cast<StoreInst>(&*I);
+                Value *v = SI->getPointerOperand();
+                std::vector<Value*> ptSet;
+                pts.getPtsSet(v, ptSet);
+                for (std::vector<Value*>::iterator it = ptSet.begin(), et = ptSet.end();
+                        it != et; ++it)
+                {
+                    assert(isa<Instruction>(*it));
+                    Instruction *inst = cast<Instruction>(*it);
+                    defNodeMap[inst].insert(instNodeMap[*I]);
+                }
+            }
+        }
+    }
+}
+
+void generatePointerEdges(Module &M)
+{
+    SDGNode *src, *dst;
+    for (std::map<Instruction *, std::set<SDGNode *> >::iterator it = defNodeMap.begin(),
+            et = defNodeMap.end(); it != et; ++it)
+    {
+        Instruction *defInst = it->first;
+        for (std::set<SDGNode*>::iterator srcIt = it->second.begin(),
+                srcE = it->second.end(); srcIt != srcE; ++srcIt)
+        {
+            src = *srcIt;
+            for (Value::use_iterator dstValIt = defInst->use_begin(),
+                    dstValE = F->use_end(); dstValIt != dstValE; ++dstValIt)
+            {
+                if (Instruction *dstInst = dyn_cast<Instruction>(*dstValIt))
+                {
+                    dst = &instNodeMap[dstInst];
+                    //XXX: Memeory Leak
+                    graph.insert(src, dst, new SDGEdge(flow));
+                }
+            }
+        }
+    }
 }
 
 void SDGNode::print(raw_ostream &OS) const
