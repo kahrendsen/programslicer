@@ -59,7 +59,7 @@ namespace llvm {
         void sliceModule(SDG &sdg, Module &M);
 
         /// Read the initial nodes from a given list
-        void readInit(SDG &sdg, std::istream &in);
+        void readInit(SDG &sdg, Module &M, std::istream &in);
 
         /// The input file
         static const char *initFileName;

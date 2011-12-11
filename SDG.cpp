@@ -100,6 +100,7 @@ bool SDG::runOnModule(Module &M)
         dst = &calleeOutputNodeMap[&F];
         // XXX: Memory Leak
         graph.insert(src, dst, new SDGEdge(control));
+        graph.insert(dst, src, new SDGEdge(control));
     }
 
     errs() << "create INTER\n";
@@ -205,6 +206,14 @@ void SDG::generateIntraDDG(Function &F)
                 //XXX: Memory leak
                 graph.insert(src, dst, new SDGEdge(flow));
             }
+        }
+
+        // Add return flow edge
+        if (I->getOpcode() == Instruction::Ret)
+        {
+            src = &calleeOutputNodeMap[&F];
+            //XXX: Memory leak
+            graph.insert(dst, src, new SDGEdge(flow));
         }
     }
 }

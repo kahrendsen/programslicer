@@ -17,7 +17,7 @@ bool Slice::runOnModule(Module &M)
 {
     SDG &sdg = getAnalysis<SDG>();
     ifstream fin(initFileName);
-    readInit(sdg, fin);
+    readInit(sdg, M, fin);
     markVerticesOfSlice(sdg, markedNodes);
     // TODO: implement
     sliceModule(sdg, M);
@@ -107,20 +107,22 @@ bool Slice::markReachingVertices(SDG &sdg, Slice::nodeSet_t &resultSet,
     return false;
 }
 
-void Slice::readInit(SDG &sdg, std::istream &in)
+void Slice::readInit(SDG &sdg, Module &M, std::istream &in)
 {
-    std::map<std::string, std::set<std::string> > toSliceList;
-    std::string funcName, instName;
+    std::map<std::string, std::set<long> > toSliceList;
+    std::string funcName;
+    int instNum;
     while (true)
     {
-        in >> funcName >> instName;
+        in >> funcName >> instNum;
         if (in.eof())
         {
             break;
         }
-        toSliceList[funcName].insert(instName);
+        toSliceList[funcName].insert(instNum);
     }
 
+#if 0
     SDG::SDG_t &graph = sdg.getGraph();
     SDG::SDG_t::nodeSet_t &nodeSet = graph.getNodeSet();
     for (SDG::SDG_t::nodeSet_t::iterator it = nodeSet.begin(), e = nodeSet.end();
@@ -131,12 +133,32 @@ void Slice::readInit(SDG &sdg, std::istream &in)
         {
             if (Instruction *I = dyn_cast<Instruction>(node->getValue()))
             {
-                errs() << "name=" << I->getName() << ": " << I << "\n";
+                errs() << "name=" << I->getName() << ": " << *I << "\n";
                 Function *F = I->getParent()->getParent();
                 if (F->getName() == funcName && I->getName() == instName)
                 {
                     markedNodes.insert(node);
                 }
+            }
+        }
+    }
+#endif
+
+    for (Module::iterator it = M.begin(), et = M.end(); it != et; ++it)
+    {
+        Function &F = *it;
+        std::set<long> &toSliceListForFunc = toSliceList[F.getName()];
+        if (toSliceListForFunc.empty())
+            continue;
+        long count;
+        count = 0;
+        for (inst_iterator jt = inst_begin(F), et = inst_end(F); jt != et; ++jt)
+        {
+            Instruction *I = &*jt;
+            if (toSliceListForFunc.find(count++) != toSliceListForFunc.end())
+            {
+                SDGNode *node = &sdg.getInstNodeMap()[I];
+                markedNodes.insert(node);
             }
         }
     }
