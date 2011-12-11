@@ -7,6 +7,8 @@
 
 char Slice::ID = 0;
 
+const char* Slice::initFileName = "slice.conf";
+
 static RegisterPass<Slice> A("Slice", "Slice Pass",
         false /* only looks at CFG */,
         false /* analysis pass */);
@@ -14,6 +16,8 @@ static RegisterPass<Slice> A("Slice", "Slice Pass",
 bool Slice::runOnModule(Module &M)
 {
     SDG &sdg = getAnalysis<SDG>();
+    ifstream fin(initFileName);
+    readInit(sdg, fin);
     markVerticesOfSlice(sdg, markedNodes);
     // TODO: implement
     sliceModule(sdg, M);
@@ -65,8 +69,9 @@ void Slice::sliceModule(SDG &sdg, Module &M)
 bool Slice::markVerticesOfSlice(SDG &sdg, Slice::nodeSet_t &resultSet)
 {
     // Initialize result list
-    SDG::SDG_t &graph = sdg.getGraph();
-    SDG::SDG_t::nodeSet_t &nodeSet = graph.getNodeSet();
+//    SDG::SDG_t &graph = sdg.getGraph();
+//    SDG::SDG_t::nodeSet_t &nodeSet = graph.getNodeSet();
+    SDG::SDG_t::nodeSet_t &nodeSet = resultSet;
 
     // Step 1: Slice without descending into called procedure
     markReachingVertices(sdg, resultSet, nodeSet,
@@ -100,5 +105,40 @@ bool Slice::markReachingVertices(SDG &sdg, Slice::nodeSet_t &resultSet,
         }
     }
     return false;
+}
+
+void Slice::readInit(SDG &sdg, std::istream &in)
+{
+    std::map<std::string, std::set<std::string> > toSliceList;
+    std::string funcName, instName;
+    while (true)
+    {
+        in >> funcName >> instName;
+        if (in.eof())
+        {
+            break;
+        }
+        toSliceList[funcName].insert(instName);
+    }
+
+    SDG::SDG_t &graph = sdg.getGraph();
+    SDG::SDG_t::nodeSet_t &nodeSet = graph.getNodeSet();
+    for (SDG::SDG_t::nodeSet_t::iterator it = nodeSet.begin(), e = nodeSet.end();
+            it != e; ++it)
+    {
+        SDGNode *node = *it;
+        if (node != NULL && node->getAttr() == instruction)
+        {
+            if (Instruction *I = dyn_cast<Instruction>(node->getValue()))
+            {
+                errs() << "name=" << I->getName() << ": " << I << "\n";
+                Function *F = I->getParent()->getParent();
+                if (F->getName() == funcName && I->getName() == instName)
+                {
+                    markedNodes.insert(node);
+                }
+            }
+        }
+    }
 }
 

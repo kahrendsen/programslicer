@@ -1,4 +1,6 @@
 #!/bin/sh
 ../my-llvm-gcc --emit-llvm -g -c s.c -o s.bc
 ../my-llvm-gcc --emit-llvm -g -S s.c -o s.ll
-../../../../Release/bin/opt -load ../../../../Release/lib/ProgramSlicing.so -Slice -print-module < s.bc > /dev/null 2> go.out
+../../../../Release/bin/opt -load ../../../../Release/lib/PointerAnalysis.so \
+-load ../../../../Release/lib/ProgramSlicing.so \
+-Slice -print-module < s.bc > /dev/null 2> go.out

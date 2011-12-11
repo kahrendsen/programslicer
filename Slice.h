@@ -58,6 +58,12 @@ namespace llvm {
         /// Slice only nodes within the markedNodes
         void sliceModule(SDG &sdg, Module &M);
 
+        /// Read the initial nodes from a given list
+        void readInit(SDG &sdg, std::istream &in);
+
+        /// The input file
+        static const char *initFileName;
+
         nodeSet_t markedNodes;
     };
 } // end of anonymous namespace
