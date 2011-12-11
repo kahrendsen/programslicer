@@ -178,7 +178,7 @@ bool SDG::runOnModule(Module &M)
     return false;
 }
 
-bool SDG::generateIntraDDG(Function &F)
+void SDG::generateIntraDDG(Function &F)
 {
     // TODO: Consider pointers
     SDGNode *src, *dst;
@@ -207,15 +207,14 @@ bool SDG::generateIntraDDG(Function &F)
             }
         }
     }
-    return false;
 }
 
-void generateDefNodeMap(Module &M)
+void SDG::generateDefNodeMap(Module &M)
 {
     for (Module::iterator mi = M.begin(), me = M.end(); mi != me; ++mi)
     {
         Function &F = *mi;
-        for (inst_iterator I = inst_being(F), E = inst_end(F); I != E; ++I)
+        for (inst_iterator I = inst_begin(F), E = inst_end(F); I != E; ++I)
         {
            if (I->getOpcode() == Instruction::Store)
            {
@@ -228,14 +227,14 @@ void generateDefNodeMap(Module &M)
                 {
                     assert(isa<Instruction>(*it));
                     Instruction *inst = cast<Instruction>(*it);
-                    defNodeMap[inst].insert(instNodeMap[*I]);
+                    defNodeMap[inst].insert(&instNodeMap[&*I]);
                 }
             }
         }
     }
 }
 
-void generatePointerEdges(Module &M)
+void SDG::generatePointerEdges(Module &M)
 {
     SDGNode *src, *dst;
     for (std::map<Instruction *, std::set<SDGNode *> >::iterator it = defNodeMap.begin(),
@@ -247,7 +246,7 @@ void generatePointerEdges(Module &M)
         {
             src = *srcIt;
             for (Value::use_iterator dstValIt = defInst->use_begin(),
-                    dstValE = F->use_end(); dstValIt != dstValE; ++dstValIt)
+                    dstValE = defInst->use_end(); dstValIt != dstValE; ++dstValIt)
             {
                 if (Instruction *dstInst = dyn_cast<Instruction>(*dstValIt))
                 {

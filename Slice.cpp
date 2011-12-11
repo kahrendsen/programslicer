@@ -8,8 +8,8 @@
 char Slice::ID = 0;
 
 static RegisterPass<Slice> A("Slice", "Slice Pass",
-        true /* only looks at Slice */,
-        true /* analysis pass */);
+        false /* only looks at CFG */,
+        false /* analysis pass */);
 
 bool Slice::runOnModule(Module &M)
 {
@@ -30,7 +30,7 @@ void Slice::sliceModule(SDG &sdg, Module &M)
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
         SDGNode *funcEntryNode = &entryMap[&*it];
-        assert(funcEntryNode->attr == entry);
+        assert(funcEntryNode->getAttr() == entry);
         if (markedNodes.find(funcEntryNode) == markedNodes.end())
         {
             functionToRemove.push_back(&*it);
@@ -48,7 +48,7 @@ void Slice::sliceModule(SDG &sdg, Module &M)
         {
             Instruction *I = &*jt;
             SDGNode *instNode = &instMap[I];
-            assert(instNode->attr == instruction);
+            assert(instNode->getAttr() == instruction);
             if (markedNodes.find(instNode) == markedNodes.end())
             {
                 instructionToRemove.push_back(I);
