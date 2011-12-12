@@ -18,6 +18,7 @@ bool Slice::runOnModule(Module &M)
     SDG &sdg = getAnalysis<SDG>();
     ifstream fin(initFileName);
     readInit(sdg, M, fin);
+    fin.close();
     markVerticesOfSlice(sdg, markedNodes);
     // TODO: implement
     sliceModule(sdg, M);
