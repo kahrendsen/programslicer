@@ -1,15 +1,19 @@
+
+int add(int* ax, int* ay)
+{
+  return *ax + *ay;
+}
+
 int main()
 {
-    int a, b, c;
-    b = 2;
-    if (a < 0)
-    {
-        b = 0;
-    }
-    else
-    {
-        b = 1;
-    }
-    c = b;
-    return 0;
+  int x, y, z, w;
+  int* px;
+
+  px = &x;
+  *px = 20;
+
+  px = &y;
+  *px = 10;
+
+  z = add(px, px);
 }

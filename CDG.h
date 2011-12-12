@@ -29,8 +29,7 @@ namespace llvm {
     /// The class generates a control dependence graph for a function.
     class CDG : public FunctionPass {
     public:
-        typedef DirectedGraph<BasicBlock, void> _bbGraph_t;
-        typedef DirectedGraph<Instruction, void> _instGraph_t;
+        typedef DirectedGraph<BasicBlock, int> _bbGraph_t;
 
         // Pass Indentifier 
         static char ID;
@@ -50,8 +49,6 @@ namespace llvm {
     private:
         // The control dependence graph based on basic blocks
         _bbGraph_t _bbGraph;
-        // The control dependence graph based on instructions
-        //_instGraph_t _instGraph;
     };
 } // end of anonymous namespace
 

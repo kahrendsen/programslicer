@@ -99,7 +99,7 @@ namespace llvm {
                     O << "\"";
                     if (jt->second != NULL)
                     {
-                        O << " [ label = \"" << jt->second << "\" ]";
+                        O << " [ label = \"" << *jt->second << "\" ]";
                     }
                     O << ";\n";
                 }

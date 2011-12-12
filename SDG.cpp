@@ -128,14 +128,16 @@ bool SDG::runOnModule(Module &M)
                 graph.insert(src, dst, new SDGEdge(call));
                 // Step 2.2: Add aux nodes for function call.
                 unsigned numArgs = CI->getNumArgOperands();
+                Function::arg_iterator arg_it = CF->arg_begin();
                 for (unsigned i = 0; i < numArgs; ++i)
                 {
-                    Function::arg_iterator arg_it = F.arg_begin();
-                    Argument *calleeArg = &*arg_it;
                     // The callee should have at least the same number of
                     // argument as the caller, otherwise the function call is
                     // invalid.
-                    //assert(arg_it != arg_end);
+                    assert(arg_it != CF->arg_end());
+                    Argument *calleeArg = &*arg_it;
+                    ++arg_it;
+
                     // Add aux nodes for callee input
                     Value *callerArg = CI->getArgOperand(i);
                     callerInputMap.insert(std::pair<Value *, SDGNode>(
@@ -152,11 +154,17 @@ bool SDG::runOnModule(Module &M)
                     graph.insert(src, dst, new SDGEdge(paramIn));
                 }
                 // Add return value as output aux nodes
-                callerInputMap.insert(std::pair<Value *, SDGNode>(
+                callerOutputMap.insert(std::pair<Value *, SDGNode>(
                             CI,
                             SDGNode(callerAux, CI)));
-                src = &callerOutputMap[CI];
-                dst = &calleeOutputNodeMap[&F];
+                // Add control edges
+                src = &instNodeMap[CI];
+                dst = &callerOutputMap[CI];
+                graph.insert(src, dst, new SDGEdge(control));
+
+                // Add param out edges
+                src = &calleeOutputNodeMap[CF];
+                dst = &callerOutputMap[CI];
                 // XXX: Memory leak
                 graph.insert(src, dst, new SDGEdge(paramOut));
             }
@@ -214,6 +222,13 @@ void SDG::generateIntraDDG(Function &F)
             src = &calleeOutputNodeMap[&F];
             //XXX: Memory leak
             graph.insert(dst, src, new SDGEdge(flow));
+        }
+        // Add call return flow edge
+        if (CallInst *CI = dyn_cast<CallInst>(&*I))
+        {
+            src = &callerOutputNodeMap[CI][CI];
+            //XXX: Memory leak
+            graph.insert(src, dst, new SDGEdge(flow));
         }
     }
 }
@@ -273,8 +288,10 @@ void SDGNode::print(raw_ostream &OS) const
     OS << nodeAttrString[attr] << ":";
     if (value == NULL)
         OS << "NULL";
-    else
+    else if (isa<Instruction>(value))
         OS << *value;
+    else
+        OS << value->getName();
     OS << "\n";
 }
 

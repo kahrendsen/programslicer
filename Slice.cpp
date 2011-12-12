@@ -37,6 +37,7 @@ void Slice::sliceModule(SDG &sdg, Module &M)
         assert(funcEntryNode->getAttr() == entry);
         if (markedNodes.find(funcEntryNode) == markedNodes.end())
         {
+            errs() << "Function Removed: " << *it;
             functionToRemove.push_back(&*it);
         }
     }
@@ -100,6 +101,8 @@ bool Slice::markReachingVertices(SDG &sdg, Slice::nodeSet_t &resultSet,
                     && it->second != NULL // There is an edge
                     && it->second->ifMask(mask)) // Of the specified type
             {
+//                if (it->first->getValue()->getName() == "add")
+                errs() << "ADD: " << *it->first << "\n";
                 workSet.insert(it->first);
             }
         }
@@ -158,6 +161,7 @@ void Slice::readInit(SDG &sdg, Module &M, std::istream &in)
             if (toSliceListForFunc.find(count++) != toSliceListForFunc.end())
             {
                 SDGNode *node = &sdg.getInstNodeMap()[I];
+                errs() << "Marked Node: " << *node << "\n";
                 markedNodes.insert(node);
             }
         }

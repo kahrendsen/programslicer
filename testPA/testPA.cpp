@@ -19,6 +19,7 @@
 #include "llvm/Analysis/DebugInfo.h"
 
 #include "../PA/PtsAnders.h"
+#include "../PA/PtsSfs.h"
 
 #include <vector>
 
@@ -31,7 +32,10 @@ namespace {
     TestPA() : ModulePass(ID) {}
     
     virtual bool runOnModule(Module &M) {
-      ptsAnders.runOnModule(M);
+      errs() << "run Sfs M begin\n";
+      //ptsAnders.runOnModule(M);
+      ptsSfs.runOnModule(M);
+      errs() << "run M end\n";
       
       for(Module::iterator it=M.begin(); it!=M.end(); ++it)
       {
@@ -47,7 +51,8 @@ namespace {
       for(inst_iterator I = inst_begin(F), E = inst_end(F); I != E; ++I)
       {
         std::vector<Value*> ptsSet;
-        ptsAnders.getPtsSet(&*I, ptsSet);
+        //ptsAnders.getPtsSet(&*I, ptsSet);
+        ptsSfs.getPtsSet(&*I, ptsSet);
         errs() << *I << " : ";
         for(std::vector<Value*>::iterator it=ptsSet.begin(); it!= ptsSet.end(); ++it)
         {
@@ -62,6 +67,7 @@ namespace {
     
     protected:
       PtsAnders ptsAnders;
+      PtsSfs ptsSfs;
   }; // end of struct TestPA
   
   char TestPA::ID = 0;
