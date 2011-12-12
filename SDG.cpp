@@ -100,7 +100,7 @@ bool SDG::runOnModule(Module &M)
         dst = &calleeOutputNodeMap[&F];
         // XXX: Memory Leak
         graph.insert(src, dst, new SDGEdge(control));
-        graph.insert(dst, src, new SDGEdge(control));
+//        graph.insert(dst, src, new SDGEdge(control));
     }
 
     errs() << "create INTER\n";
