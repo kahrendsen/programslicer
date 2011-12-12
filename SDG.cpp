@@ -272,7 +272,8 @@ void SDG::generatePointerEdges(Module &M)
             for (Value::use_iterator dstValIt = defInst->use_begin(),
                     dstValE = defInst->use_end(); dstValIt != dstValE; ++dstValIt)
             {
-                if (Instruction *dstInst = dyn_cast<Instruction>(*dstValIt))
+  //              if (Instruction *dstInst = dyn_cast<Instruction>(*dstValIt))
+                if (LoadInst *dstInst = dyn_cast<LoadInst>(*dstValIt))
                 {
                     dst = &instNodeMap[dstInst];
                     //XXX: Memeory Leak
