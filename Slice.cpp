@@ -1,7 +1,6 @@
 // Author: Hao Wu
 //
-#include "llvm/Support/InstIterator.h"
-
+#include "llvm/IR/InstIterator.h" 
 #include "SDG.h"
 #include "Slice.h"
 

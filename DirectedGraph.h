@@ -6,8 +6,8 @@
 #include <set>
 
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Type.h"
-#include "llvm/DerivedTypes.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/DerivedTypes.h"
 
 namespace llvm {
     template <typename NodeT, typename EdgeT>

@@ -15,7 +15,7 @@
 #ifndef CDG_H
 #define CDG_H
 
-#include "llvm/Function.h"
+#include "llvm/IR/Function.h"
 #include "llvm/Pass.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Support/raw_ostream.h"

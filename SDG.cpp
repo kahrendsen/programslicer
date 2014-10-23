@@ -1,6 +1,6 @@
 // Author Hao Wu and Ying-yu Chen
 
-#include "llvm/Support/InstIterator.h"
+#include "llvm/IR/InstIterator.h"
 
 #include "SDG.h"
 

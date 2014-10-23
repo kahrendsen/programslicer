@@ -15,9 +15,9 @@
 #ifndef SDG_H
 #define SDG_H
 
-#include "llvm/Argument.h"
-#include "llvm/Instructions.h"
-#include "llvm/Module.h"
+#include "llvm/IR/Argument.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Pass.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Support/raw_ostream.h"

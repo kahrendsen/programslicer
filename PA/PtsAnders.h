@@ -1,7 +1,8 @@
 
 #include "PtsInf.h"
 
-#include "llvm/sfs/include/anders.h"
+//#include "llvm/sfs/include/anders.h"
+#include "/root/source/llvm/projects/ptr-analysis/include/anders.h"
 
 class PtsAnders: public PtsInf, public Anders
 {
