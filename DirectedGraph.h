@@ -116,7 +116,7 @@ namespace llvm {
     template<typename NodeT, typename EdgeT>
     inline raw_ostream &operator <<(raw_ostream &OS, const DirectedGraph<NodeT, EdgeT> &G)
     {
-        G.print(OS);
+        // G.print(OS);
         return OS;
     }
 }

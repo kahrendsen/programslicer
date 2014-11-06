@@ -23,9 +23,9 @@ bool SDG::runOnModule(Module &M)
 {
     SDGNode *src, *dst;
 
-    errs() << "pts: begin\n";
-    pts.runOnModule(M);
-    errs() << "pts: end\n";
+    //errs() << "pts: begin\n";
+    //pts.runOnModule(M);
+    //errs() << "pts: end\n";
 
     // Step 1: INTRAprocedure Analysis - CDG
     errs() << "create CDG\n";
@@ -51,15 +51,12 @@ bool SDG::runOnModule(Module &M)
             {
                 continue;
             }
-            errs() << "D addr = " << D << "\n";
             Function *F = D->getParent();
-            //errs() << "F=" << *F <<"\n";
             CDG::_bbGraph_t::nodeMap_t &predSet = _bbGraph.getPredSet(D);
             for (CDG::_bbGraph_t::nodeMap_t::const_iterator it = predSet.begin(),
                     et = predSet.end(); it != et; ++it)
             {
                 BasicBlock *S = it->first;
-                errs() << "S addr = " << S << "\n";
                 if (S != NULL)
                 {
                     Instruction *I = S->getTerminator();
@@ -118,12 +115,15 @@ bool SDG::runOnModule(Module &M)
                 std::map<Value *, SDGNode> &callerInputMap = callerInputNodeMap[CI];
                 std::map<Value *, SDGNode> &callerOutputMap = callerOutputNodeMap[CI];
                 Function *CF = CI->getCalledFunction();
+                if (CF->isDeclaration()) {
+                    continue;
+                }
                 //                Function::ArgumentListType &CFAL = CF->getArgumentList();
                 // Step 2.1: Add call edges
                 src = &instNodeMap[CI];
                 dst = &entryNodeMap[CF];
                 assert(src->getValue());
-                assert(dst->getValue());
+                assert(dst->getValue());// REMEMBER TO COME BACK TO THIS!!!!!!!!!!
                 //XXX: Memory leak
                 graph.insert(src, dst, new SDGEdge(call));
                 // Step 2.2: Add aux nodes for function call.
@@ -183,7 +183,6 @@ bool SDG::runOnModule(Module &M)
     generateDefNodeMap(M);
     generatePointerEdges(M);
 
-    errs() << graph << "\n";
     return false;
 }
 
@@ -194,7 +193,6 @@ void SDG::generateIntraDDG(Function &F)
     // Use du chain in LLVM
     for (inst_iterator I = inst_begin(F), E = inst_end(F); I != E; ++I)
     {
-        errs() << *I << "\n";
         assert(instNodeMap.find(&*I) != instNodeMap.end());
         dst = &instNodeMap[&*I];
         for (User::op_iterator i = I->op_begin(), e = I->op_end(); i != e; ++i)
@@ -244,6 +242,7 @@ void SDG::generateDefNodeMap(Module &M)
            {
                 StoreInst *SI = cast<StoreInst>(&*I);
                 Value *v = SI->getPointerOperand();
+                /*
                 std::vector<Value*> ptSet;
                 pts.getPtsSet(v, ptSet);
                 for (std::vector<Value*>::iterator it = ptSet.begin(), et = ptSet.end();
@@ -253,6 +252,7 @@ void SDG::generateDefNodeMap(Module &M)
                     Instruction *inst = cast<Instruction>(*it);
                     defNodeMap[inst].insert(&instNodeMap[&*I]);
                 }
+                */
             }
         }
     }

@@ -25,7 +25,7 @@
 #include "CDG.h"
 #include "DirectedGraph.h"
 
-#include "PA/PtsAnders.h"
+//#include "PA/PtsAnders.h"
 
 using namespace llvm;
 
@@ -139,7 +139,7 @@ namespace llvm {
             // The map which records the def nodes of an allocation
             std::map<Instruction *, std::set<SDGNode *> > defNodeMap;
             // PtsSet
-            PtsAnders pts;
+            //PtsAnders pts;
 
             void generateDefNodeMap(Module &M);
             void generateIntraDDG(Function &F);

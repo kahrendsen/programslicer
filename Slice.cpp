@@ -3,6 +3,7 @@
 #include "llvm/IR/InstIterator.h" 
 #include "SDG.h"
 #include "Slice.h"
+#include <fstream>
 
 char Slice::ID = 0;
 
@@ -15,13 +16,18 @@ static RegisterPass<Slice> A("Slice", "Slice Pass",
 bool Slice::runOnModule(Module &M)
 {
     SDG &sdg = getAnalysis<SDG>();
-    ifstream fin(initFileName);
+    std::ifstream fin(initFileName);
+    if (fin.is_open() == false) {
+        std::cerr << "Error opening: " << initFileName << "\n";
+        return false;
+    }
+
     readInit(sdg, M, fin);
     fin.close();
     markVerticesOfSlice(sdg, markedNodes);
     // TODO: implement
-    sliceModule(sdg, M);
-    errs() << M << "\n";
+    // sliceModule(sdg, M);
+    // errs() << M << "\n";
     return true;
 }
 
@@ -33,6 +39,12 @@ void Slice::sliceModule(SDG &sdg, Module &M)
     std::vector<Instruction *> instructionToRemove;
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
+        Function& function = *it;
+        if (entryMap.find(&function) == entryMap.end()) {
+            std::cerr << "Function " << function.getName().str() << " not found in entryMap\n";
+            continue;
+        }
+        
         SDGNode *funcEntryNode = &entryMap[&*it];
         assert(funcEntryNode->getAttr() == entry);
         if (markedNodes.find(funcEntryNode) == markedNodes.end())
@@ -44,6 +56,8 @@ void Slice::sliceModule(SDG &sdg, Module &M)
     for (std::vector<Function *>::iterator it = functionToRemove.begin(),
             e = functionToRemove.end(); it != e; ++it)
     {
+        Function* function = *it;
+        errs() << "removing function: " << function->getName().str() << "\n";
         (*it)->removeFromParent();
     }
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
@@ -63,6 +77,9 @@ void Slice::sliceModule(SDG &sdg, Module &M)
     for (std::vector<Instruction *>::iterator it = instructionToRemove.begin(),
             e = instructionToRemove.end(); it != e; ++it)
     {
+        errs() << "removing instruction: ";
+        Instruction* instr = *it;
+        instr->dump();
         (*it)->removeFromParent();
     }
 }
@@ -70,9 +87,9 @@ void Slice::sliceModule(SDG &sdg, Module &M)
 bool Slice::markVerticesOfSlice(SDG &sdg, Slice::nodeSet_t &resultSet)
 {
     // Initialize result list
-//    SDG::SDG_t &graph = sdg.getGraph();
-//    SDG::SDG_t::nodeSet_t &nodeSet = graph.getNodeSet();
-    SDG::SDG_t::nodeSet_t &nodeSet = resultSet;
+    SDG::SDG_t &graph = sdg.getGraph();
+    SDG::SDG_t::nodeSet_t &nodeSet = graph.getNodeSet();
+    // SDG::SDG_t::nodeSet_t &nodeSet = resultSet;
 
     // Step 1: Slice without descending into called procedure
     markReachingVertices(sdg, resultSet, nodeSet,
@@ -118,6 +135,7 @@ void Slice::readInit(SDG &sdg, Module &M, std::istream &in)
     while (true)
     {
         in >> funcName >> instNum;
+        std::cerr << "read: " << funcName << ", " << instNum << "\n";
         if (in.eof())
         {
             break;
