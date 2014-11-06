@@ -26,7 +26,7 @@ bool Slice::runOnModule(Module &M)
     fin.close();
     markVerticesOfSlice(sdg, markedNodes);
     // TODO: implement
-    // sliceModule(sdg, M);
+    sliceModule(sdg, M);
     // errs() << M << "\n";
     return true;
 }
@@ -49,7 +49,7 @@ void Slice::sliceModule(SDG &sdg, Module &M)
         assert(funcEntryNode->getAttr() == entry);
         if (markedNodes.find(funcEntryNode) == markedNodes.end())
         {
-            errs() << "Function Removed: " << *it;
+            // errs() << "Function Removed: " << *it;
             functionToRemove.push_back(&*it);
         }
     }
@@ -57,7 +57,7 @@ void Slice::sliceModule(SDG &sdg, Module &M)
             e = functionToRemove.end(); it != e; ++it)
     {
         Function* function = *it;
-        errs() << "removing function: " << function->getName().str() << "\n";
+        // errs() << "removing function: " << function->getName().str() << "\n";
         (*it)->removeFromParent();
     }
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
@@ -77,9 +77,9 @@ void Slice::sliceModule(SDG &sdg, Module &M)
     for (std::vector<Instruction *>::iterator it = instructionToRemove.begin(),
             e = instructionToRemove.end(); it != e; ++it)
     {
-        errs() << "removing instruction: ";
-        Instruction* instr = *it;
-        instr->dump();
+        // errs() << "removing instruction: ";
+        // Instruction* instr = *it;
+        // instr->dump();
         (*it)->removeFromParent();
     }
 }
@@ -119,7 +119,7 @@ bool Slice::markReachingVertices(SDG &sdg, Slice::nodeSet_t &resultSet,
                     && it->second->ifMask(mask)) // Of the specified type
             {
 //                if (it->first->getValue()->getName() == "add")
-                errs() << "ADD: " << *it->first << "\n";
+                // errs() << "ADD: " << *it->first << "\n";
                 workSet.insert(it->first);
             }
         }
@@ -179,7 +179,7 @@ void Slice::readInit(SDG &sdg, Module &M, std::istream &in)
             if (toSliceListForFunc.find(count++) != toSliceListForFunc.end())
             {
                 SDGNode *node = &sdg.getInstNodeMap()[I];
-                errs() << "Marked Node: " << *node << "\n";
+                // errs() << "Marked Node: " << *node << "\n";
                 markedNodes.insert(node);
             }
         }

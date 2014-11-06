@@ -77,7 +77,7 @@ bool CDG::runOnFunction(Function &F)
         }
     }
 
-    errs() << _instGraph;
+    // errs() << _instGraph;
 #endif
 
     return false;

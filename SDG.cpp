@@ -28,7 +28,6 @@ bool SDG::runOnModule(Module &M)
     //errs() << "pts: end\n";
 
     // Step 1: INTRAprocedure Analysis - CDG
-    errs() << "create CDG\n";
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
         if (it->isDeclaration())
@@ -40,7 +39,7 @@ bool SDG::runOnModule(Module &M)
 
         // Add normal control edges
         CDG::_bbGraph_t _bbGraph = cdg.getBBGraph();
-        errs() << cdg.getBBGraph();
+        // errs() << cdg.getBBGraph();
 
         std::set<BasicBlock *> &nodeSet = _bbGraph.getNodeSet();
         for (std::set<BasicBlock *>::iterator fIt = nodeSet.begin(),
@@ -100,7 +99,6 @@ bool SDG::runOnModule(Module &M)
 //        graph.insert(dst, src, new SDGEdge(control));
     }
 
-    errs() << "create INTER\n";
     // Step 2: INTERprocedure Analysis
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
@@ -171,7 +169,6 @@ bool SDG::runOnModule(Module &M)
         }
     }
 
-    errs() << "create DDG\n";
     // Step 3: Create DDG without pointer analysis
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
@@ -180,8 +177,8 @@ bool SDG::runOnModule(Module &M)
     }
 
     // Step 4: Create DDG with pointer analysis
-    generateDefNodeMap(M);
-    generatePointerEdges(M);
+    // generateDefNodeMap(M);
+    // generatePointerEdges(M);
 
     return false;
 }
