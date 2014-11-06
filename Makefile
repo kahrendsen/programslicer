@@ -10,9 +10,13 @@ LIBRARYNAME = ProgramSlicing
 # dlopen/dlsym on the resulting library.
 LOADABLE_MODULE = 1
 
+#USEDLIBS = anders
+
 #LLVM_OBJ_ROOT = /v/filer4b/v20q001/yychen/LLVM/llvm
 
 # Include the makefile implementation stuff
 include $(LEVEL)/Makefile.common
+
+LIBS += -landers
 
 # LDFLAGS += -lPointerAnalysis
