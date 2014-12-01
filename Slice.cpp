@@ -4,6 +4,8 @@
 #include "SDG.h"
 #include "Slice.h"
 #include <fstream>
+#include "llvm/Support/raw_ostream.h"
+#include <iostream>
 
 char Slice::ID = 0;
 
@@ -16,6 +18,8 @@ static RegisterPass<Slice> A("Slice", "Slice Pass",
 bool Slice::runOnModule(Module &M)
 {
     SDG &sdg = getAnalysis<SDG>();
+    //raw_os_ostream &o(std::cout);
+    outs()<<sdg.getGraph();
     std::ifstream fin(initFileName);
     if (fin.is_open() == false) {
         std::cerr << "Error opening: " << initFileName << "\n";
@@ -88,8 +92,8 @@ bool Slice::markVerticesOfSlice(SDG &sdg, Slice::nodeSet_t &resultSet)
 {
     // Initialize result list
     SDG::SDG_t &graph = sdg.getGraph();
-    SDG::SDG_t::nodeSet_t &nodeSet = graph.getNodeSet();
-    // SDG::SDG_t::nodeSet_t &nodeSet = resultSet;
+    // SDG::SDG_t::nodeSet_t &nodeSet = graph.getNodeSet();
+    SDG::SDG_t::nodeSet_t &nodeSet = resultSet;
 
     // Step 1: Slice without descending into called procedure
     markReachingVertices(sdg, resultSet, nodeSet,
