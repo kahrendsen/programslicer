@@ -36,6 +36,7 @@ namespace llvm {
         {
             AU.setPreservesAll();
             AU.addRequired<SDG>();
+            AU.addRequired<AndersAA>();
         }
 
     private:

@@ -3,6 +3,7 @@
 #include "llvm/IR/InstIterator.h"
 
 #include "SDG.h"
+//#include "ptranalysis/include/anders.h"
 
 char SDG::ID = 0;
 
@@ -177,7 +178,7 @@ bool SDG::runOnModule(Module &M)
     }
 
     // Step 4: Create DDG with pointer analysis
-    // generateDefNodeMap(M);
+    generateDefNodeMap(M);
     // generatePointerEdges(M);
 
     return false;
@@ -239,17 +240,18 @@ void SDG::generateDefNodeMap(Module &M)
            {
                 StoreInst *SI = cast<StoreInst>(&*I);
                 Value *v = SI->getPointerOperand();
-                /*
-                std::vector<Value*> ptSet;
-                pts.getPtsSet(v, ptSet);
-                for (std::vector<Value*>::iterator it = ptSet.begin(), et = ptSet.end();
+                AndersAA &andersaa = getAnalysis<AndersAA>();
+                const std::vector<u32>* ptSet = andersaa.anders->pointsToSet(v,0);
+                //pts.getPtsSet(v, ptSet);
+                for (std::vector<u32>::const_iterator it = ptSet->begin(), et = ptSet->end();
                         it != et; ++it)
                 {
-                    assert(isa<Instruction>(*it));
-                    Instruction *inst = cast<Instruction>(*it);
+                    Value* val = andersaa.anders->get_nodes()[*it]->get_val();
+                    assert(isa<Instruction>(val));
+                    Instruction *inst = cast<Instruction>(val);
                     defNodeMap[inst].insert(&instNodeMap[&*I]);
                 }
-                */
+                
             }
         }
     }

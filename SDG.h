@@ -24,8 +24,9 @@
 
 #include "CDG.h"
 #include "DirectedGraph.h"
+#include "ptranalysis/include/anders-aa.h"
 
-//#include "PA/PtsAnders.h"
+//#include "ptranalysis/include/PtsAnders.h"
 
 using namespace llvm;
 
@@ -107,6 +108,8 @@ namespace llvm {
             {
                 AU.setPreservesCFG();
                 AU.addRequired<CDG>();
+                AU.addRequired<AndersAA>();
+                
             }
 
             SDG_t &getGraph() { return graph; }

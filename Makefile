@@ -17,6 +17,8 @@ LOADABLE_MODULE = 1
 # Include the makefile implementation stuff
 include $(LEVEL)/Makefile.common
 
-LIBS += -landers
+LIBS += /usr/local/lib/anders-aa.so
+LIBS += /usr/local/lib/libanders.so
+
 
 # LDFLAGS += -lPointerAnalysis
