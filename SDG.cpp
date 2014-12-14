@@ -122,7 +122,7 @@ bool SDG::runOnModule(Module &M)
                 src = &instNodeMap[CI];
                 dst = &entryNodeMap[CF];
                 assert(src->getValue());
-                assert(dst->getValue());// REMEMBER TO COME BACK TO THIS!!!!!!!!!!
+                assert(dst->getValue());
                 //XXX: Memory leak
                 graph.insert(src, dst, new SDGEdge(call));
                 // Step 2.2: Add aux nodes for function call.
@@ -179,7 +179,7 @@ bool SDG::runOnModule(Module &M)
 
     // Step 4: Create DDG with pointer analysis
     generateDefNodeMap(M);
-    // generatePointerEdges(M);
+    //generatePointerEdges(M);
 
     return false;
 }
@@ -231,6 +231,7 @@ void SDG::generateIntraDDG(Function &F)
 
 void SDG::generateDefNodeMap(Module &M)
 {
+    AndersAA &andersaa = getAnalysis<AndersAA>();
     for (Module::iterator mi = M.begin(), me = M.end(); mi != me; ++mi)
     {
         Function &F = *mi;
@@ -240,7 +241,6 @@ void SDG::generateDefNodeMap(Module &M)
            {
                 StoreInst *SI = cast<StoreInst>(&*I);
                 Value *v = SI->getPointerOperand();
-                AndersAA &andersaa = getAnalysis<AndersAA>();
                 const std::vector<u32>* ptSet = andersaa.anders->pointsToSet(v,0);
                 //pts.getPtsSet(v, ptSet);
                 for (std::vector<u32>::const_iterator it = ptSet->begin(), et = ptSet->end();

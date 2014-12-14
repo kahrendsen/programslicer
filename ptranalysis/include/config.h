@@ -16,7 +16,7 @@
 #define USE_STATS 1
 #define USE_METRICS 1
 #define USE_MEM_TIME 1
-#define USE_PROFILER 1
+#define USE_PROFILER 0
 //Setting these to 0 will disable debug output for each stage, by changing
 //  DEBUG_TYPE to ___disabled. For this to take effect, run opt with
 //  -debug-only=anders; with -debug it will still output everything.

@@ -188,5 +188,9 @@ void Slice::readInit(SDG &sdg, Module &M, std::istream &in)
             }
         }
     }
+    if(markedNodes.empty()){
+
+        printf("Could not find any instructions from slice.conf! Perhaps you miscounted, or something is wrong with SDG\n") ;
+    }
 }
 

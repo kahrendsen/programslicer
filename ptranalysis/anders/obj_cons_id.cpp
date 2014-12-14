@@ -122,7 +122,7 @@ void Anders::obj_cons_id(){
 //------------------------------------------------------------------------------
 //Look for nodes that are read by constraints but never written.
 void Anders::check_cons_undef() const{
-  hash_set<u32> def;
+    hash_set<u32> def;
   FORN(i, constraints.size()){
     if(constraints[i].type != store_cons)
       def.insert(constraints[i].dest);
@@ -419,7 +419,7 @@ void Anders::id_func(Function *F){
     //  and find where the last ptr arg is.
     //  If there are no ptr args at all, last_ptr will be ~0 rather than 0.
     vector<Value*> args;
-    u32 last_ptr= ~0UL, i= 0;
+    u64 last_ptr= ~0UL, i= 0;
     for(Function::arg_iterator it= F->arg_begin(), ie= F->arg_end(); it != ie;
         ++it, ++i){
       Value *V= it;
@@ -660,6 +660,13 @@ void Anders::id_alloc_insn(Instruction *I){
       T= AT->getElementType();
     }
   }
+#else
+    T= AI->getAllocatedType();
+    //An array is considered the same as 1 element.
+    while(const ArrayType *AT= dyn_cast<ArrayType>(T)){
+      weak= 1;
+      T= AT->getElementType();
+    }
 #endif
 
   u32 on= next_node;
