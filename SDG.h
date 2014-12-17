@@ -24,7 +24,8 @@
 
 #include "CDG.h"
 #include "DirectedGraph.h"
-#include "ptranalysis/include/anders-aa.h"
+//#include "ptranalysis/include/anders-aa.h"
+#include "andersen/include/AndersenAA.h"
 
 //#include "ptranalysis/include/PtsAnders.h"
 
@@ -108,7 +109,7 @@ namespace llvm {
             {
                 AU.setPreservesCFG();
                 AU.addRequired<CDG>();
-                AU.addRequired<AndersAA>();
+                AU.addRequired<AndersenAA>();
                 
             }
 
@@ -140,7 +141,7 @@ namespace llvm {
             // The map for all caller output aux nodes
             std::map<CallInst *, std::map<Value *, SDGNode> >callerOutputNodeMap;
             // The map which records the def nodes of an allocation
-            std::map<Instruction *, std::set<SDGNode *> > defNodeMap;
+            std::map<Instruction *, std::set<SDGNode *> > defNodeMap; //Remember this change - KA
             // PtsSet
             //PtsAnders pts;
 

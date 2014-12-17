@@ -3,6 +3,8 @@
 #include "llvm/IR/InstIterator.h"
 
 #include "SDG.h"
+#include "llvm/Analysis/AliasSetTracker.h"
+#include "llvm/Support/raw_os_ostream.h"
 //#include "ptranalysis/include/anders.h"
 
 char SDG::ID = 0;
@@ -179,7 +181,7 @@ bool SDG::runOnModule(Module &M)
 
     // Step 4: Create DDG with pointer analysis
     generateDefNodeMap(M);
-    //generatePointerEdges(M);
+    generatePointerEdges(M);
 
     return false;
 }
@@ -231,7 +233,15 @@ void SDG::generateIntraDDG(Function &F)
 
 void SDG::generateDefNodeMap(Module &M)
 {
-    AndersAA &andersaa = getAnalysis<AndersAA>();
+    AndersenAA &andersaa = getAnalysis<AndersenAA>();
+
+    AliasSetTracker tracker(andersaa);
+    for(Module::iterator f = M.begin(),e=M.end(); f!=e; f++){
+        for(Function::iterator b = f->begin(), eb=f->end(); b!=eb; b++){
+            tracker.add(*b);
+        }
+
+    }
     for (Module::iterator mi = M.begin(), me = M.end(); mi != me; ++mi)
     {
         Function &F = *mi;
@@ -241,16 +251,54 @@ void SDG::generateDefNodeMap(Module &M)
            {
                 StoreInst *SI = cast<StoreInst>(&*I);
                 Value *v = SI->getPointerOperand();
-                const std::vector<u32>* ptSet = andersaa.anders->pointsToSet(v,0);
-                //pts.getPtsSet(v, ptSet);
-                for (std::vector<u32>::const_iterator it = ptSet->begin(), et = ptSet->end();
-                        it != et; ++it)
-                {
-                    Value* val = andersaa.anders->get_nodes()[*it]->get_val();
-                    assert(isa<Instruction>(val));
-                    Instruction *inst = cast<Instruction>(val);
-                    defNodeMap[inst].insert(&instNodeMap[&*I]);
+
+                Type *type = v->getType();
+//                if(type->isPointerTy()){ //We're storing a pointer in memory, we need to do pointer analysis on it
+                    //std::vector<const llvm::Value*> ptSet;
+                    //andersaa.anders->getPointsToSet(v,ptSet);
+
+                if(type->isPointerTy()){
+                    AAMDNodes nodes;
+                    SI->getAAMetadata(nodes); //Should we use v instead of SI?
+                    AliasSet& ptSet = tracker.getAliasSetForPointer(v,M.getDataLayout()->getTypeAllocSize(type),nodes);
+
+                    for(AliasSet::iterator asit = ptSet.begin(), asend=ptSet.end(); asit!=asend; asit++)
+                    {
+                        Value* val = &(*asit.getPointer());
+                        assert(isa<Instruction>(val));
+                        Instruction *inst = cast<Instruction>(val);
+                        defNodeMap[inst].insert(&instNodeMap[&*I]);
+                    }
                 }
+
+
+
+//                    for (std::vector<const llvm::Value*>::iterator it = ptSet.begin(), et = ptSet.end();
+//                            it != et; ++it)
+//                    {
+//                        const Value * val = *it;
+//                        assert(isa<Instruction>(val));
+//                        const Instruction *inst = cast<const Instruction>(val);
+//                        defNodeMap[const_cast<Instruction *>(inst)].insert(&instNodeMap[&*I]);
+//                    }
+
+//                }
+
+//                Type *type = v->getType();
+//                if(type->isPointerTy()){ //We're storing a pointer in memory, we need to do pointer analysis on it
+//                    const std::vector<u32>* ptSet = andersaa.anders->pointsToSet(v,0);
+//                    //pts.getPtsSet(v, ptSet);
+//                    for (std::vector<u32>::const_iterator it = ptSet->begin(), et = ptSet->end();
+//                            it != et; ++it)
+//                    {
+//                        Value* val = andersaa.anders->get_nodes()[*it]->get_val(); //Anders gives us back nodes, so we get the value for each item of points-to set
+//                        assert(isa<Instruction>(val)); //The above should guarantee we only get instructions
+//                        Instruction *inst = cast<Instruction>(val);
+//                        defNodeMap[inst].insert(&instNodeMap[&*I]);
+//                    }
+
+
+//                }
                 
             }
         }
@@ -267,12 +315,13 @@ void SDG::generatePointerEdges(Module &M)
         for (std::set<SDGNode*>::iterator srcIt = it->second.begin(),
                 srcE = it->second.end(); srcIt != srcE; ++srcIt)
         {
+            defInst->dump();
             src = *srcIt;
+            src->getValue()->dump();
             for (Value::use_iterator dstValIt = defInst->use_begin(),
                     dstValE = defInst->use_end(); dstValIt != dstValE; ++dstValIt)
             {
-  //              if (Instruction *dstInst = dyn_cast<Instruction>(*dstValIt))
-                if (LoadInst *dstInst = dyn_cast<LoadInst>(*dstValIt))
+                if (LoadInst *dstInst = dyn_cast<LoadInst>(dstValIt->getUser())) //For every load, we need to have flow-dependence on every pointer that could have modified the value we're loading
                 {
                     dst = &instNodeMap[dstInst];
                     //XXX: Memeory Leak
