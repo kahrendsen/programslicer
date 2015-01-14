@@ -258,9 +258,9 @@ void SDG::generateDefNodeMap(Module &M)
                     //andersaa.anders->getPointsToSet(v,ptSet);
 
                 if(type->isPointerTy()){
-                    AAMDNodes nodes;
-                    SI->getAAMetadata(nodes); //Should we use v instead of SI?
-                    AliasSet& ptSet = tracker.getAliasSetForPointer(v,M.getDataLayout()->getTypeAllocSize(type),nodes);
+                    //AAMDNodes nodes;
+                    //SI->getAAMetadata(nodes); //Should we use v instead of SI?
+                    AliasSet& ptSet = tracker.getAliasSetForPointer(v,M.getDataLayout()->getTypeAllocSize(type),nullptr);
 
                     for(AliasSet::iterator asit = ptSet.begin(), asend=ptSet.end(); asit!=asend; asit++)
                     {

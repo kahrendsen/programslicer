@@ -7,6 +7,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include <iostream>
 
+
 char Slice::ID = 0;
 
 const char* Slice::initFileName = "slice.conf";
@@ -14,6 +15,8 @@ const char* Slice::initFileName = "slice.conf";
 static RegisterPass<Slice> A("Slice", "Slice Pass",
         false /* only looks at CFG */,
         false /* analysis pass */);
+
+std::map<SDGNode*, std::pair<int,int>> boundsMap;
 
 bool Slice::runOnModule(Module &M)
 {
@@ -60,7 +63,7 @@ void Slice::sliceModule(SDG &sdg, Module &M)
     for (std::vector<Function *>::iterator it = functionToRemove.begin(),
             e = functionToRemove.end(); it != e; ++it)
     {
-        Function* function = *it;
+        //Function* function = *it;
         // errs() << "removing function: " << function->getName().str() << "\n";
         (*it)->removeFromParent();
     }
@@ -115,16 +118,39 @@ bool Slice::markReachingVertices(SDG &sdg, Slice::nodeSet_t &resultSet,
 
         SDG::SDG_t &graph = sdg.getGraph();
         const SDG::SDG_t::nodeMap_t &predMap(graph.getPredSet(node));
+        InterProceduralRA<Cousot> &ra = getAnalysis<InterProceduralRA<Cousot> >();
         for (SDG::SDG_t::nodeMap_t::const_iterator it = predMap.begin(), e = predMap.end();
                 it != e; ++it)
         {
-            if (resultSet.find(it->first) == resultSet.end() // Unmarked node
-                    && it->second != NULL // There is an edge
-                    && it->second->ifMask(mask)) // Of the specified type
+            Instruction* i=NULL;
+
+            //There's no easy way to convert from SDGNode to instruction...
+            for(std::map<Instruction*,SDGNode>::iterator pair = sdg.getInstNodeMap().begin(); pair!=sdg.getInstNodeMap().end();pair++){
+                if(&(pair->second) == it->first){
+                    i=pair->first;
+                    break;
+                }
+            }
+             
+            //assert(i!=NULL);
+            if(i==NULL)
             {
-//                if (it->first->getValue()->getName() == "add")
-                // errs() << "ADD: " << *it->first << "\n";
                 workSet.insert(it->first);
+            }
+            else{
+            
+                Range r = ra.getRange(i);
+                if (resultSet.find(it->first) == resultSet.end() // Unmarked node
+                        && it->second != NULL // There is an edge
+                        && it->second->ifMask(mask)// Of the specified type
+                        && i!=NULL 
+                        && boundsMap[it->first].first<r.getUpper().getSExtValue()
+                        && boundsMap[it->first].second>r.getLower().getSExtValue())//and it's within range 
+                {
+    //                if (it->first->getValue()->getName() == "add")
+                    // errs() << "ADD: " << *it->first << "\n";
+                    workSet.insert(it->first);
+                }
             }
         }
     }
@@ -136,15 +162,20 @@ void Slice::readInit(SDG &sdg, Module &M, std::istream &in)
     std::map<std::string, std::set<long> > toSliceList;
     std::string funcName;
     int instNum;
+    int lower;
+    int upper;
+    std::map<int, std::pair<int, int>> lineToBounds;
     while (true)
     {
-        in >> funcName >> instNum;
+        in >> funcName >> instNum >> lower >> upper;
         std::cerr << "read: " << funcName << ", " << instNum << "\n";
         if (in.eof())
         {
             break;
         }
         toSliceList[funcName].insert(instNum);
+        lineToBounds[instNum]=std::make_pair(lower,upper);
+
     }
 
 #if 0
@@ -185,6 +216,9 @@ void Slice::readInit(SDG &sdg, Module &M, std::istream &in)
                 SDGNode *node = &sdg.getInstNodeMap()[I];
                 // errs() << "Marked Node: " << *node << "\n";
                 markedNodes.insert(node);
+                boundsMap[node]=std::pair<int,int>(lineToBounds[instNum].first,lineToBounds[instNum].second);
+                
+
             }
         }
     }

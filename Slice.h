@@ -17,6 +17,7 @@
 
 #include "DirectedGraph.h"
 #include "SDG.h"
+#include "../../range-analysis-read-only/src/RangeAnalysis/RangeAnalysis.h"
 
 using namespace llvm;
 
@@ -36,6 +37,8 @@ namespace llvm {
         {
             AU.setPreservesAll();
             AU.addRequired<SDG>();
+            AU.addRequired< InterProceduralRA<Cousot> >();
+
         //    AU.addRequired<AndersAA>();
         }
 
@@ -45,7 +48,7 @@ namespace llvm {
         /// system dependence graph.
         /// sdg: system dependence graph
         /// resultSet: the result marked node list
-        static bool markVerticesOfSlice(SDG &sdg, nodeSet_t &resultSet);
+        bool markVerticesOfSlice(SDG &sdg, nodeSet_t &resultSet);
 
         /// mark the reaching vertices to a set of vertices, with a certain edge
         /// type mask.
@@ -53,7 +56,7 @@ namespace llvm {
         /// workSet: the initial work list, COPY-ON-VALUE
         /// resultSet: the result marked node list
         /// mask: edge mask to be considered.
-        static bool markReachingVertices(SDG &sdg, nodeSet_t &resultSet,
+        bool markReachingVertices(SDG &sdg, nodeSet_t &resultSet,
                 nodeSet_t workSet, int mask);
 
         /// Slice only nodes within the markedNodes
