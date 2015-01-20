@@ -24,12 +24,12 @@ using namespace llvm;
 namespace llvm {
 
     /// The class generates a control dependence graph for a function.
-    class Slice : public ModulePass {
+    class BackSlice : public ModulePass {
     public:
         typedef std::set<SDGNode*> nodeSet_t;
         // Pass Indentifier 
         static char ID;
-        Slice() : ModulePass(ID) {}
+        BackSlice() : ModulePass(ID) {}
 
         virtual bool runOnModule(Module &F);
 
@@ -48,7 +48,7 @@ namespace llvm {
         /// system dependence graph.
         /// sdg: system dependence graph
         /// resultSet: the result marked node list
-        bool markVerticesOfSlice(SDG &sdg, nodeSet_t &resultSet);
+        bool markVerticesOfBackSlice(SDG &sdg, nodeSet_t &resultSet);
 
         /// mark the reaching vertices to a set of vertices, with a certain edge
         /// type mask.
@@ -56,7 +56,7 @@ namespace llvm {
         /// workSet: the initial work list, COPY-ON-VALUE
         /// resultSet: the result marked node list
         /// mask: edge mask to be considered.
-        bool markReachingVertices(SDG &sdg, nodeSet_t &resultSet,
+        bool markReachingVerticesForBackSlice(SDG &sdg, nodeSet_t &resultSet,
                 nodeSet_t workSet, int mask);
 
         /// Slice only nodes within the markedNodes

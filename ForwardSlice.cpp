@@ -2,23 +2,24 @@
 //
 #include "llvm/IR/InstIterator.h" 
 #include "SDG.h"
-#include "Slice.h"
+#include "ForwardSlice.h"
 #include <fstream>
 #include "llvm/Support/raw_ostream.h"
 #include <iostream>
 
 
-char Slice::ID = 0;
+char ForwardSlice::ID = 0;
 
-const char* Slice::initFileName = "slice.conf";
+const char* ForwardSlice::initFileName = "slice.conf";
 
-static RegisterPass<Slice> A("Slice", "Slice Pass",
+static RegisterPass<ForwardSlice> A("forward-slice", "Forward Slice Pass",
         false /* only looks at CFG */,
         false /* analysis pass */);
 
-std::map<SDGNode*, std::pair<int,int>> boundsMap;
+//std::map<SDGNode*, std::pair<int,int>> boundsMap;
+//bool useRange=true;
 
-bool Slice::runOnModule(Module &M)
+bool ForwardSlice::runOnModule(Module &M)
 {
     SDG &sdg = getAnalysis<SDG>();
     //raw_os_ostream &o(std::cout);
@@ -31,42 +32,43 @@ bool Slice::runOnModule(Module &M)
 
     readInit(sdg, M, fin);
     fin.close();
-    markVerticesOfSlice(sdg, markedNodes);
+    markVerticesOfForwardSlice(sdg, markedNodes);
     // TODO: implement
     sliceModule(sdg, M);
     // errs() << M << "\n";
     return true;
 }
 
-void Slice::sliceModule(SDG &sdg, Module &M)
+void ForwardSlice::sliceModule(SDG &sdg, Module &M)
 {
     std::map<Instruction *, SDGNode> &instMap = sdg.getInstNodeMap();
     std::map<Function *, SDGNode> &entryMap = sdg.getEntryNodeMap();
     std::vector<Function *> functionToRemove;
     std::vector<Instruction *> instructionToRemove;
-    for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
-    {
-        Function& function = *it;
-        if (entryMap.find(&function) == entryMap.end()) {
-            std::cerr << "Function " << function.getName().str() << " not found in entryMap\n";
-            continue;
-        }
+    //for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
+    //{
+        //Function& function = *it;
+        //if (entryMap.find(&function) == entryMap.end()) {
+            //std::cerr << "Function " << function.getName().str() << " not found in entryMap\n";
+            //continue;
+        //}
         
-        SDGNode *funcEntryNode = &entryMap[&*it];
-        assert(funcEntryNode->getAttr() == entry);
-        if (markedNodes.find(funcEntryNode) == markedNodes.end())
-        {
-            // errs() << "Function Removed: " << *it;
-            functionToRemove.push_back(&*it);
-        }
-    }
-    for (std::vector<Function *>::iterator it = functionToRemove.begin(),
-            e = functionToRemove.end(); it != e; ++it)
-    {
+        //SDGNode *funcEntryNode = &entryMap[&*it];
+        //assert(funcEntryNode->getAttr() == entry);
+        //if (markedNodes.find(funcEntryNode) == markedNodes.end())
+        //{
+            //errs() << "Function Removed: " << *it;
+            //functionToRemove.push_back(&*it);
+        //}
+    //}
+    //for (std::vector<Function *>::iterator it = functionToRemove.begin(),
+            //e = functionToRemove.end(); it != e; ++it)
+    //{
         //Function* function = *it;
-        // errs() << "removing function: " << function->getName().str() << "\n";
-        (*it)->removeFromParent();
-    }
+        //errs() << "removing function: " << function->getName().str() << "\n";
+        
+        //(*it)->removeFromParent();
+    //}
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
         for (inst_iterator jt = inst_begin(*it), et = inst_end(*it);
@@ -84,14 +86,14 @@ void Slice::sliceModule(SDG &sdg, Module &M)
     for (std::vector<Instruction *>::iterator it = instructionToRemove.begin(),
             e = instructionToRemove.end(); it != e; ++it)
     {
-        // errs() << "removing instruction: ";
-        // Instruction* instr = *it;
-        // instr->dump();
+        errs() << "removing instruction: ";
+        Instruction* instr = *it;
+        instr->dump();
         (*it)->removeFromParent();
     }
 }
 
-bool Slice::markVerticesOfSlice(SDG &sdg, Slice::nodeSet_t &resultSet)
+bool ForwardSlice::markVerticesOfForwardSlice(SDG &sdg, ForwardSlice::nodeSet_t &resultSet)
 {
     // Initialize result list
     SDG::SDG_t &graph = sdg.getGraph();
@@ -99,16 +101,16 @@ bool Slice::markVerticesOfSlice(SDG &sdg, Slice::nodeSet_t &resultSet)
     SDG::SDG_t::nodeSet_t &nodeSet = resultSet;
 
     // Step 1: Slice without descending into called procedure
-    markReachingVertices(sdg, resultSet, nodeSet,
+    markReachingVerticesForForwardSlice(sdg, resultSet, nodeSet,
             control | flow | call | paramIn);
     // Step 2: Slice called procedures, without aschending to call sites
-    markReachingVertices(sdg, resultSet, resultSet,
+    markReachingVerticesForForwardSlice(sdg, resultSet, resultSet,
             control | flow | paramOut);
     return false;
 }
 
-bool Slice::markReachingVertices(SDG &sdg, Slice::nodeSet_t &resultSet,
-        Slice::nodeSet_t workSet, int mask)
+bool ForwardSlice::markReachingVerticesForForwardSlice(SDG &sdg, ForwardSlice::nodeSet_t &resultSet,
+        ForwardSlice::nodeSet_t workSet, int mask)
 {
     while (!workSet.empty())
     {
@@ -117,47 +119,49 @@ bool Slice::markReachingVertices(SDG &sdg, Slice::nodeSet_t &resultSet,
         resultSet.insert(node);
 
         SDG::SDG_t &graph = sdg.getGraph();
-        const SDG::SDG_t::nodeMap_t &predMap(graph.getPredSet(node));
+        const SDG::SDG_t::nodeMap_t &succMap(graph.getSuccSet(node));
         InterProceduralRA<Cousot> &ra = getAnalysis<InterProceduralRA<Cousot> >();
-        for (SDG::SDG_t::nodeMap_t::const_iterator it = predMap.begin(), e = predMap.end();
+        for (SDG::SDG_t::nodeMap_t::const_iterator it = succMap.begin(), e = succMap.end();
                 it != e; ++it)
         {
             Instruction* i=NULL;
 
             //There's no easy way to convert from SDGNode to instruction...
-            for(std::map<Instruction*,SDGNode>::iterator pair = sdg.getInstNodeMap().begin(); pair!=sdg.getInstNodeMap().end();pair++){
-                if(&(pair->second) == it->first){
-                    i=pair->first;
-                    break;
-                }
-            }
+            //for(std::map<Instruction*,SDGNode>::iterator pair = sdg.getInstNodeMap().begin(); pair!=sdg.getInstNodeMap().end();pair++){
+                //if(&(pair->second) == it->first){
+                    //i=pair->first;
+                    //break;
+                //}
+            //}
              
             //assert(i!=NULL);
-            if(i==NULL)
-            {
-                workSet.insert(it->first);
-            }
-            else{
+            //if(i==NULL)
+            //{
+                //workSet.insert(it->first);
+            //}
+            //else{
             
-                Range r = ra.getRange(i);
+                //Range r = ra.getRange(i);
                 if (resultSet.find(it->first) == resultSet.end() // Unmarked node
                         && it->second != NULL // There is an edge
-                        && it->second->ifMask(mask)// Of the specified type
-                        && i!=NULL 
-                        && boundsMap[it->first].first<r.getUpper().getSExtValue()
-                        && boundsMap[it->first].second>r.getLower().getSExtValue())//and it's within range 
+                        && it->second->ifMask(mask))// Of the specified type
+                        //&& i!=NULL 
+                        //&& boundsMap[it->first].first<r.getUpper().getSExtValue()
+                        //&& boundsMap[it->first].second>r.getLower().getSExtValue())//and it's within range 
                 {
     //                if (it->first->getValue()->getName() == "add")
-                    // errs() << "ADD: " << *it->first << "\n";
+                    errs() << "ADD: " << *it->first << "\n";
                     workSet.insert(it->first);
                 }
-            }
+            //}
         }
     }
     return false;
 }
 
-void Slice::readInit(SDG &sdg, Module &M, std::istream &in)
+
+
+void ForwardSlice::readInit(SDG &sdg, Module &M, std::istream &in)
 {
     std::map<std::string, std::set<long> > toSliceList;
     std::string funcName;
@@ -167,8 +171,12 @@ void Slice::readInit(SDG &sdg, Module &M, std::istream &in)
     std::map<int, std::pair<int, int>> lineToBounds;
     while (true)
     {
-        in >> funcName >> instNum >> lower >> upper;
+        in >> funcName >> instNum;
+        if(!(in >> lower) || !(in >> upper))
+            //useRange=false;
         std::cerr << "read: " << funcName << ", " << instNum << "\n";
+        std::cerr << "range: " << lower << " , " << upper;
+        //assert(0);
         if (in.eof())
         {
             break;
@@ -214,9 +222,9 @@ void Slice::readInit(SDG &sdg, Module &M, std::istream &in)
             if (toSliceListForFunc.find(count++) != toSliceListForFunc.end())
             {
                 SDGNode *node = &sdg.getInstNodeMap()[I];
-                // errs() << "Marked Node: " << *node << "\n";
+                errs() << "Marked Node: " << *node << "\n";//this is where we mark the initial nodes to begin slicing on
                 markedNodes.insert(node);
-                boundsMap[node]=std::pair<int,int>(lineToBounds[instNum].first,lineToBounds[instNum].second);
+                //boundsMap[node]=std::pair<int,int>(lineToBounds[instNum].first,lineToBounds[instNum].second);
                 
 
             }

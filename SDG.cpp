@@ -102,6 +102,8 @@ bool SDG::runOnModule(Module &M)
 //        graph.insert(dst, src, new SDGEdge(control));
     }
 
+    //outs()<<graph;
+
     // Step 2: INTERprocedure Analysis
     for (Module::iterator it = M.begin(), e = M.end(); it != e; ++it)
     {
@@ -122,9 +124,9 @@ bool SDG::runOnModule(Module &M)
                 //                Function::ArgumentListType &CFAL = CF->getArgumentList();
                 // Step 2.1: Add call edges
                 src = &instNodeMap[CI];
-                dst = &entryNodeMap[CF];
+                dst = &entryNodeMap[CF]; //Edge of type call from the call instruction to the function's entry node
                 assert(src->getValue());
-                assert(dst->getValue());
+                assert(dst->getValue()); 
                 //XXX: Memory leak
                 graph.insert(src, dst, new SDGEdge(call));
                 // Step 2.2: Add aux nodes for function call.
@@ -178,6 +180,8 @@ bool SDG::runOnModule(Module &M)
         Function &F = *it;
         generateIntraDDG(F);
     }
+
+    outs()<<graph;
 
     // Step 4: Create DDG with pointer analysis
     generateDefNodeMap(M);
@@ -242,6 +246,7 @@ void SDG::generateDefNodeMap(Module &M)
         }
 
     }
+    tracker.dump();
     for (Module::iterator mi = M.begin(), me = M.end(); mi != me; ++mi)
     {
         Function &F = *mi;
@@ -261,6 +266,7 @@ void SDG::generateDefNodeMap(Module &M)
                     //AAMDNodes nodes;
                     //SI->getAAMetadata(nodes); //Should we use v instead of SI?
                     AliasSet& ptSet = tracker.getAliasSetForPointer(v,M.getDataLayout()->getTypeAllocSize(type),nullptr);
+                    //tracker.getAliasSetForPointer(v,M.getDataLayout()->getTypeAllocSize(type),nullptr).dump();
 
                     for(AliasSet::iterator asit = ptSet.begin(), asend=ptSet.end(); asit!=asend; asit++)
                     {
@@ -315,9 +321,9 @@ void SDG::generatePointerEdges(Module &M)
         for (std::set<SDGNode*>::iterator srcIt = it->second.begin(),
                 srcE = it->second.end(); srcIt != srcE; ++srcIt)
         {
-            defInst->dump();
+            //defInst->dump();
             src = *srcIt;
-            src->getValue()->dump();
+            //src->getValue()->dump();
             for (Value::use_iterator dstValIt = defInst->use_begin(),
                     dstValE = defInst->use_end(); dstValIt != dstValE; ++dstValIt)
             {
